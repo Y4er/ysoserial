@@ -1,4 +1,4 @@
-package ysoserial.payloads.shells;
+package ysoserial.payloads.templates;
 
 import com.sun.org.apache.xalan.internal.xsltc.DOM;
 import com.sun.org.apache.xalan.internal.xsltc.TransletException;
