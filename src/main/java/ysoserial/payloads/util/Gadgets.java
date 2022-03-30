@@ -93,7 +93,6 @@ public class Gadgets {
             byte[] bs = Files.readBytes(new File(command.substring(5)));
             return createTemplatesImpl(null, null, bs, tplClass, abstTranslet, transFactory);
         } else {
-            if (command.startsWith("CMD:")) command = command.substring(4);
             return createTemplatesImpl(null, command, null, tplClass, abstTranslet, transFactory);
         }
     }

