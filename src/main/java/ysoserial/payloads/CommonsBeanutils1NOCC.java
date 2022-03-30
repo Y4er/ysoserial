@@ -1,6 +1,7 @@
 package ysoserial.payloads;
 
 import org.apache.commons.beanutils.BeanComparator;
+import org.apache.commons.lang.RandomStringUtils;
 import sun.misc.BASE64Encoder;
 import ysoserial.Serializer;
 import ysoserial.payloads.annotation.Authors;

