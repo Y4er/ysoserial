@@ -5,7 +5,6 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * @author mbechler
- *
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PayloadTest {

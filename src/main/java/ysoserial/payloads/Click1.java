@@ -44,10 +44,14 @@ import java.util.PriorityQueue;
 
     by @artsploit
 */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked"})
 @Dependencies({"org.apache.click:click-nodeps:2.3.0", "javax.servlet:javax.servlet-api:3.1.0"})
-@Authors({ Authors.ARTSPLOIT })
+@Authors({Authors.ARTSPLOIT})
 public class Click1 implements ObjectPayload<Object> {
+
+    public static void main(final String[] args) throws Exception {
+        PayloadRunner.run(Click1.class, args);
+    }
 
     public Object getObject(final String command) throws Exception {
 
@@ -73,9 +77,5 @@ public class Click1 implements ObjectPayload<Object> {
         queueArray[0] = templates;
 
         return queue;
-    }
-
-    public static void main(final String[] args) throws Exception {
-        PayloadRunner.run(Click1.class, args);
     }
 }

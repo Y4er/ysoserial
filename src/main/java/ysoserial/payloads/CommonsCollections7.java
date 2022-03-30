@@ -5,7 +5,6 @@ import org.apache.commons.collections.functors.ChainedTransformer;
 import org.apache.commons.collections.functors.ConstantTransformer;
 import org.apache.commons.collections.functors.InvokerTransformer;
 import org.apache.commons.collections.map.LazyMap;
-
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.util.PayloadRunner;
@@ -37,6 +36,10 @@ import java.util.Map;
 @Authors({Authors.SCRISTALLI, Authors.HANYRAX, Authors.EDOARDOVIGNATI})
 
 public class CommonsCollections7 extends PayloadRunner implements ObjectPayload<Hashtable> {
+
+    public static void main(final String[] args) throws Exception {
+        PayloadRunner.run(CommonsCollections7.class, args);
+    }
 
     public Hashtable getObject(final String command) throws Exception {
 
@@ -79,9 +82,5 @@ public class CommonsCollections7 extends PayloadRunner implements ObjectPayload<
         lazyMap2.remove("yy");
 
         return hashtable;
-    }
-
-    public static void main(final String[] args) throws Exception {
-        PayloadRunner.run(CommonsCollections7.class, args);
     }
 }

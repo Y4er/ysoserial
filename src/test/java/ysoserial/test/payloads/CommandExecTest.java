@@ -30,9 +30,12 @@ public class CommandExecTest implements CustomTest {
     public String getPayloadArgs() {
         switch (OS.get()) {
             case OSX:
-            case LINUX: return "touch " + testFile;
-            case WINDOWS: return "powershell -command new-item -type file " + testFile;
-            default: throw new UnsupportedOperationException("unsupported os");
+            case LINUX:
+                return "touch " + testFile;
+            case WINDOWS:
+                return "powershell -command new-item -type file " + testFile;
+            default:
+                throw new UnsupportedOperationException("unsupported os");
         }
     }
 

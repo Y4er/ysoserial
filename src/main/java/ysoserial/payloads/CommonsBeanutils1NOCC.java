@@ -1,19 +1,12 @@
 package ysoserial.payloads;
 
 import org.apache.commons.beanutils.BeanComparator;
-import org.apache.commons.lang.RandomStringUtils;
-import sun.misc.BASE64Encoder;
-import ysoserial.Serializer;
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
-import ysoserial.payloads.templates.SpringInterceptorTemplate;
-import ysoserial.payloads.util.ClassFiles;
 import ysoserial.payloads.util.Gadgets;
 import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.PriorityQueue;
 
 @SuppressWarnings({"rawtypes", "unchecked"})

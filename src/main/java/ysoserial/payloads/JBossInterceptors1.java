@@ -30,13 +30,17 @@ import java.util.*;
 */
 @SuppressWarnings({"rawtypes", "unchecked"})
 @PayloadTest(precondition = "isApplicableJavaVersion")
-@Dependencies({ "javassist:javassist:3.12.1.GA", "org.jboss.interceptor:jboss-interceptor-core:2.0.0.Final",
+@Dependencies({"javassist:javassist:3.12.1.GA", "org.jboss.interceptor:jboss-interceptor-core:2.0.0.Final",
     "javax.enterprise:cdi-api:1.0-SP1", "javax.interceptor:javax.interceptor-api:3.1",
-    "org.jboss.interceptor:jboss-interceptor-spi:2.0.0.Final", "org.slf4j:slf4j-api:1.7.21" })
-@Authors({ Authors.MATTHIASKAISER })
+    "org.jboss.interceptor:jboss-interceptor-spi:2.0.0.Final", "org.slf4j:slf4j-api:1.7.21"})
+@Authors({Authors.MATTHIASKAISER})
 public class JBossInterceptors1 implements ObjectPayload<Object> {
     public static boolean isApplicableJavaVersion() {
         return JavaVersion.isAtLeast(7);
+    }
+
+    public static void main(final String[] args) throws Exception {
+        PayloadRunner.run(JBossInterceptors1.class, args);
     }
 
     public Object getObject(final String command) throws Exception {
@@ -53,7 +57,7 @@ public class JBossInterceptors1 implements ObjectPayload<Object> {
         Constructor defaultMethodMetadataConstructor = DefaultMethodMetadata.class.getDeclaredConstructor(Set.class, MethodReference.class);
         Reflections.setAccessible(defaultMethodMetadataConstructor);
         MethodMetadata methodMetadata = (MethodMetadata) defaultMethodMetadataConstructor.newInstance(s,
-                MethodReference.of(TemplatesImpl.class.getMethod("newTransformer"), true));
+            MethodReference.of(TemplatesImpl.class.getMethod("newTransformer"), true));
 
         List list = new ArrayList();
         list.add(methodMetadata);
@@ -81,10 +85,5 @@ public class JBossInterceptors1 implements ObjectPayload<Object> {
 
         return new InterceptorMethodHandler(map, metadata, model, interceptorInstantiator, factory);
 
-    }
-
-
-    public static void main(final String[] args) throws Exception {
-        PayloadRunner.run(JBossInterceptors1.class, args);
     }
 }

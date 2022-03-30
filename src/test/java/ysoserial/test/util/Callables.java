@@ -3,8 +3,13 @@ package ysoserial.test.util;
 import java.util.concurrent.Callable;
 
 public class Callables {
+    public static <T> Callable<T> wrap(Callable<T> callable, BeforeAfterCallback callback) {
+        return new Wrapper<T>(callable, callback);
+    }
+
     public static interface BeforeAfterCallback {
         public void before();
+
         public void after();
     }
 
@@ -26,9 +31,5 @@ public class Callables {
                 callback.after();
             }
         }
-    }
-
-    public static <T> Callable<T> wrap(Callable<T> callable, BeforeAfterCallback callback) {
-        return new Wrapper<T>(callable, callback);
     }
 }

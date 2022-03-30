@@ -3,7 +3,6 @@ package ysoserial.payloads.util;
 
 /**
  * @author mbechler
- *
  */
 public class JavaVersion {
 
@@ -13,18 +12,17 @@ public class JavaVersion {
     public int update;
 
 
-
     public static JavaVersion getLocalVersion() {
         String property = System.getProperties().getProperty("java.version");
-        if ( property == null ) {
+        if (property == null) {
             return null;
         }
         JavaVersion v = new JavaVersion();
         String parts[] = property.split("\\.|_|-");
         int start = "1".equals(parts[0]) ? 1 : 0; // skip "1." prefix
-        v.major   = Integer.parseInt(parts[start + 0]);
-        v.minor   = Integer.parseInt(parts[start + 1]);
-        v.update  = Integer.parseInt(parts[start + 2]);
+        v.major = Integer.parseInt(parts[start + 0]);
+        v.minor = Integer.parseInt(parts[start + 1]);
+        v.update = Integer.parseInt(parts[start + 2]);
         return v;
     }
 

