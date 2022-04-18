@@ -225,11 +225,10 @@ public class TomcatServletMemShellFromJMX extends AbstractTranslet implements Se
                                 Map.Entry<String, ArrayList<String>> next = iterator.next();
                                 String paramKey = next.getKey().replaceAll(" ", "+");
                                 ArrayList<String> paramValueList = next.getValue();
-                                String paramValue = paramValueList.get(0);
                                 if (paramValueList.size() == 0) {
                                     payload = payload + paramKey;
                                 } else {
-                                    payload = payload + paramKey + "=" + paramValue;
+                                    payload = payload + paramKey + "=" + paramValueList.get(0);
                                 }
                             }
                         }
