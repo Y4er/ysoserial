@@ -23,8 +23,8 @@
                 <version>3.5.1</version>
                 <configuration>
                     <!-- maximize compatibility -->
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>7</source>
+                    <target>7</target>
                     <!-- ignore noisy internal api warnings -->
                     <compilerArgument>-XDignore.symbol.file</compilerArgument>
                     <fork>true</fork>
