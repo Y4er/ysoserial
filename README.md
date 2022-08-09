@@ -96,7 +96,7 @@ java -jar ysoserial.jar CommonsBeanutils192NOCC "calc"                          
 
 ## 下载
 
-1. [点我下载打包好的jar包](https://ysoserial.y4er.com/ysoserial-0.0.6-SNAPSHOT-all.jar)
+1. [点我下载打包好的jar包](https://jitpack.io/com/github/Y4er/ysoserial/main/ysoserial-main.jar)
 
 
 ## Building
