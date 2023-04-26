@@ -14,12 +14,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@Dependencies({"commons-beanutils:commons-beanutils:1.9.2", "commons-collections:commons-collections:3.1", "commons-logging:commons-logging:1.2"})
+@Dependencies({"commons-beanutils:commons-beanutils:1.9.2", "commons-collections:commons-collections:3.1"})
 @Authors({Authors.Y4ER})
-public class CommonsBeanutils1WithDualTreeBidiMap implements ObjectPayload<Object> {
+public class CommonsBeanutils192WithDualTreeBidiMap implements ObjectPayload<Object> {
 
     public static void main(final String[] args) throws Exception {
-        PayloadRunner.run(CommonsBeanutils1WithDualTreeBidiMap.class, args);
+        PayloadRunner.run(CommonsBeanutils192WithDualTreeBidiMap.class, args);
     }
 
     public Object getObject(final String command) throws Exception {
