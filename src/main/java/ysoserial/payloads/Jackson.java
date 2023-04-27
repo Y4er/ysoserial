@@ -1,6 +1,5 @@
 package ysoserial.payloads;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.fasterxml.jackson.databind.node.POJONode;
 import javassist.ClassPool;
 import javassist.CtClass;
