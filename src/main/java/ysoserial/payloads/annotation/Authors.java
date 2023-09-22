@@ -27,7 +27,8 @@ public @interface Authors {
     String JANG = "Jang";
     String ARTSPLOIT = "artsploit";
     String NAVALORENZO = "navalorenzo";
-
+    String SSEELEY = "steven_seeley";
+    String RCALVI = "rocco_calvi";
     String[] value() default {};
 
     public static class Utils {

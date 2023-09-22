@@ -16,10 +16,10 @@ import java.util.HashMap;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @Dependencies({"com.fasterxml.jackson.core:jackson-databind:2.14.2"})
 @Authors({Authors.Y4ER})
-public class Jackson implements ObjectPayload<Object> {
+public class Jackson1 implements ObjectPayload<Object> {
 
     public static void main(final String[] args) throws Exception {
-        PayloadRunner.run(Jackson.class, args);
+        PayloadRunner.run(Jackson1.class, args);
     }
 
     public Object getObject(final String command) throws Exception {
