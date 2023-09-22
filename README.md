@@ -9,13 +9,14 @@ $  java -jar ysoserial.jar
 Y SO SERIAL?
 Usage: java -jar ysoserial-[version]-all.jar [payload] '[command]'
   Available payload types:
-四月 27, 2023 8:38:01 上午 org.reflections.Reflections scan
-信息: Reflections took 70 ms to scan 1 urls, producing 22 keys and 197 values
+九月 22, 2023 9:45:34 上午 org.reflections.Reflections scan
+信息: Reflections took 72 ms to scan 1 urls, producing 22 keys and 208 values
      Payload                                Authors                                Dependencies
      -------                                -------                                ------------
      AspectJWeaver                          @Jang                                  aspectjweaver:1.9.2, commons-collections:3.2.2
      BeanShell1                             @pwntester, @cschneider4711            bsh:2.0b5
      C3P0                                   @mbechler                              c3p0:0.9.5.2, mchange-commons-java:0.2.11
+     Ceylon                                 @kai_ullrich                           ceylon.language:1.3.3
      Click1                                 @artsploit                             click-nodeps:2.3.0, javax.servlet-api:3.1.0
      Clojure                                @JackOfMostTrades                      clojure:1.8.0
      CommonsBeanutils1                      @frohoff                               commons-beanutils:1.9.2, commons-collections:3.1, commons-logging:1.2
@@ -41,10 +42,12 @@ Usage: java -jar ysoserial-[version]-all.jar [payload] '[command]'
      JRMPClient                             @mbechler
      JRMPListener                           @mbechler
      JSON1                                  @mbechler                              json-lib:jar:jdk15:2.4, spring-aop:4.1.4.RELEASE, aopalliance:1.0, commons-logging:1.2, commons-lang:2.6, ezmorph:1.0.6, commons-beanutils:1.9.2, spring-core:4.1.4.RELEASE, commons-collections:3.1
-     Jackson                                @Y4er                                  jackson-databind:2.14.2
+     Jackson1                               @Y4er                                  jackson-databind:2.14.2
+     Jackson2                               @Y4er                                  jackson-databind:2.14.2, spring-aop:4.1.4.RELEASE
      JavassistWeld1                         @matthias_kaiser                       javassist:3.12.1.GA, weld-core:1.1.33.Final, cdi-api:1.0-SP1, javax.interceptor-api:3.1, jboss-interceptor-spi:2.0.0.Final, slf4j-api:1.7.21
      Jdk7u21                                @frohoff
      Jython1                                @pwntester, @cschneider4711            jython-standalone:2.5.2
+     Jython2                                @steven_seeley, @rocco_calvi           jython-standalone:2.7.3
      MozillaRhino1                          @matthias_kaiser                       js:1.7R2
      MozillaRhino2                          @_tint0                                js:1.7R2
      Myfaces1                               @mbechler
