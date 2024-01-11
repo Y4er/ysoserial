@@ -5,12 +5,12 @@ ysoserial修改版，着重修改`ysoserial.payloads.util.Gadgets.createTemplate
 ## Usage
 
 ```shell
-$  java -jar ysoserial.jar
+$  java -jar ysoserial-0.0.6-SNAPSHOT-all.jar
 Y SO SERIAL?
 Usage: java -jar ysoserial-[version]-all.jar [payload] '[command]'
   Available payload types:
-九月 22, 2023 9:45:34 上午 org.reflections.Reflections scan
-信息: Reflections took 72 ms to scan 1 urls, producing 22 keys and 208 values
+一月 11, 2024 10:44:47 上午 org.reflections.Reflections scan
+信息: Reflections took 96 ms to scan 1 urls, producing 22 keys and 208 values
      Payload                                Authors                                Dependencies
      -------                                -------                                ------------
      AspectJWeaver                          @Jang                                  aspectjweaver:1.9.2, commons-collections:3.2.2
@@ -103,7 +103,7 @@ java -jar ysoserial.jar CommonsBeanutils192NOCC "calc"                          
 
 ## 下载
 
-1. [点我下载打包好的jar包](https://jitpack.io/com/github/Y4er/ysoserial/main-SNAPSHOT/ysoserial-main-SNAPSHOT.jar)
+1. [点我下载打包好的jar包](https://github.com/Y4er/ysoserial/releases/download/latest/ysoserial-0.0.6-SNAPSHOT-all.jar)
 
 
 ## Building
